@@ -1,0 +1,28 @@
+project_name: minecraft-bot
+env:
+  - GO111MODULE=on
+before:
+  hooks:
+    - go mod tidy
+builds:
+  - main: cmd/linebot/main.go
+    binary: minecraft-bot
+    ldflags:
+      - -s -w
+      - -X github.com/ShotaKitazawa/minecraft-bot/cmd/linebot/main.Version={{.Version}}
+      - -X github.com/ShotaKitazawa/minecraft-bot/cmd/linebot/main.Revision={{.ShortCommit}}
+    env:
+      - CGO_ENABLED=0
+archives:
+  - name_template: '{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
+    replacements:
+      darwin: darwin
+      linux: linux
+      windows: windows
+      386: i386
+      amd64: x86_64
+    format_overrides:
+      - goos: windows
+        format: zip
+release:
+  prerelease: auto
