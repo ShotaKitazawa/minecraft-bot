@@ -13,10 +13,10 @@ import (
 
 type BotReceiver struct {
 	Config
-	Plugin botplug.BotPluginReceiver
+	Plugin botplug.BotPlugin
 }
 
-func (receiver *BotReceiver) WithPlugin(plugin botplug.BotPluginReceiver) *BotReceiver {
+func (receiver *BotReceiver) WithPlugin(plugin botplug.BotPlugin) *BotReceiver {
 	result := receiver
 	result.Plugin = plugin
 	return result

@@ -18,7 +18,7 @@ const (
 )
 
 type Eventer struct {
-	botplug.BotPluginSender
+	botplug.BotSender
 
 	MinecraftHostname string
 	sharedMem         sharedmem.SharedMem
@@ -26,9 +26,9 @@ type Eventer struct {
 	Logger            *logrus.Logger
 }
 
-func New(minecraftHostname string, sender botplug.BotPluginSender, m sharedmem.SharedMem, rcon rcon.RconClient, logger *logrus.Logger) (*Eventer, error) {
+func New(minecraftHostname string, sender botplug.BotSender, m sharedmem.SharedMem, rcon rcon.RconClient, logger *logrus.Logger) (*Eventer, error) {
 	return &Eventer{
-		BotPluginSender:   sender,
+		BotSender:         sender,
 		MinecraftHostname: minecraftHostname,
 		sharedMem:         m,
 		rcon:              rcon,
@@ -104,13 +104,13 @@ func (e *Eventer) job() error {
 	// send to LINE (PUSH notification) if d.LoginUsers != sharedmem.Domain.LoginUsers
 	loggingInUsernameSet := currentLoginUsernameSet.Difference(previousLoginUsernameSet)
 	if loggingInUsernameSet.Cardinality() != 0 {
-		if err := e.BotPluginSender.SendTextMessage(i18n.T.Sprintf(i18n.MessageUsersLogin, loggingInUsernameSet.ToSlice())); err != nil {
+		if err := e.BotSender.SendTextMessage(i18n.T.Sprintf(i18n.MessageUsersLogin, loggingInUsernameSet.ToSlice())); err != nil {
 			return err
 		}
 	}
 	loggingOutUsernameSet := previousLoginUsernameSet.Difference(currentLoginUsernameSet)
 	if loggingOutUsernameSet.Cardinality() != 0 {
-		if err := e.BotPluginSender.SendTextMessage(i18n.T.Sprintf(i18n.MessageUsersLogout, loggingOutUsernameSet.ToSlice())); err != nil {
+		if err := e.BotSender.SendTextMessage(i18n.T.Sprintf(i18n.MessageUsersLogout, loggingOutUsernameSet.ToSlice())); err != nil {
 			return err
 		}
 	}
