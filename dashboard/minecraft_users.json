@@ -1,0 +1,351 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": 13,
+  "iteration": 1588263267026,
+  "links": [],
+  "panels": [
+    {
+      "clusterName": "Log in",
+      "colorMode": "Panel",
+      "colors": {
+        "crit": "rgba(0, 0, 0, 0)",
+        "disable": "#C4162A",
+        "ok": "rgba(50, 128, 45, 0.9)",
+        "warn": "rgba(212, 217, 212, 0.46)"
+      },
+      "cornerRadius": null,
+      "datasource": null,
+      "displayName": "Log in",
+      "flipCard": false,
+      "flipTime": 5,
+      "fontFormat": "Regular",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 0
+      },
+      "id": 2,
+      "isAutoScrollOnOverflow": true,
+      "isGrayOnNoData": true,
+      "isHideAlertsOnDisable": false,
+      "isIgnoreOKColors": false,
+      "maxAlertNumber": null,
+      "namePrefix": "",
+      "options": {},
+      "repeat": "username",
+      "repeatDirection": "v",
+      "targets": [
+        {
+          "aggregation": "Last",
+          "alias": "_",
+          "crit": 100,
+          "decimals": 2,
+          "displayAliasType": "Always",
+          "displayType": "Regular",
+          "displayValueWithAlias": "Never",
+          "expr": "1 - sum by (username) (minecraft_user_info{username=\"$username\"})",
+          "instant": false,
+          "intervalFactor": 1,
+          "legendFormat": "_",
+          "refId": "A",
+          "units": "short",
+          "valueDisplayRegex": "/.*/",
+          "valueHandler": "Number Threshold",
+          "warn": 1
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "$username",
+      "type": "vonage-status-panel"
+    },
+    {
+      "datasource": null,
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 0
+      },
+      "id": 7,
+      "options": {
+        "colorMode": "value",
+        "fieldOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "defaults": {
+            "mappings": [],
+            "max": 0,
+            "min": 20,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "dark-red",
+                  "value": null
+                },
+                {
+                  "color": "light-yellow",
+                  "value": 5
+                },
+                {
+                  "color": "green",
+                  "value": 10
+                }
+              ]
+            }
+          },
+          "overrides": [],
+          "values": false
+        },
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "pluginVersion": "6.6.2",
+      "repeat": "username",
+      "repeatDirection": "v",
+      "targets": [
+        {
+          "expr": "avg by (username) (minecraft_health_gauge{username=\"$username\"})",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Health",
+      "type": "stat"
+    },
+    {
+      "datasource": null,
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 0
+      },
+      "id": 15,
+      "options": {
+        "colorMode": "value",
+        "fieldOptions": {
+          "calcs": [
+            "last"
+          ],
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "blue",
+                  "value": 30
+                },
+                {
+                  "color": "purple",
+                  "value": 50
+                }
+              ]
+            }
+          },
+          "overrides": [],
+          "values": false
+        },
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "pluginVersion": "6.6.2",
+      "repeat": "username",
+      "repeatDirection": "v",
+      "targets": [
+        {
+          "expr": "avg by (usernmae) (minecraft_xp_level_gauge{username=\"$username\"})",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Xp Level",
+      "type": "stat"
+    },
+    {
+      "cacheTimeout": null,
+      "columns": [],
+      "datasource": null,
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 12,
+        "y": 0
+      },
+      "id": 26,
+      "links": [],
+      "options": {},
+      "pageSize": null,
+      "repeat": "username",
+      "repeatDirection": "v",
+      "showHeader": true,
+      "sort": {
+        "col": 0,
+        "desc": true
+      },
+      "styles": [
+        {
+          "alias": "Time",
+          "align": "left",
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "link": false,
+          "pattern": "Time",
+          "type": "hidden"
+        },
+        {
+          "alias": "",
+          "align": "left",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "decimals": 1,
+          "link": false,
+          "pattern": "X",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        },
+        {
+          "alias": "",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 1,
+          "mappingType": 1,
+          "pattern": "Y",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        },
+        {
+          "alias": "",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 1,
+          "mappingType": 1,
+          "pattern": "Z",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "expr": "avg by (username) (minecraft_pos_x_gauge{username=\"$username\"})",
+          "instant": false,
+          "legendFormat": "X",
+          "refId": "A"
+        },
+        {
+          "expr": "avg by (username) (minecraft_pos_y_gauge{username=\"$username\"})",
+          "legendFormat": "Y",
+          "refId": "B"
+        },
+        {
+          "expr": "avg by (username) (minecraft_pos_z_gauge{username=\"$username\"})",
+          "legendFormat": "Z",
+          "refId": "C"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Position",
+      "transform": "timeseries_to_columns",
+      "type": "table"
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 22,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "allValue": null,
+        "datasource": "Prometheus",
+        "definition": "minecraft_user_info",
+        "hide": 0,
+        "includeAll": false,
+        "label": null,
+        "multi": true,
+        "name": "username",
+        "options": [],
+        "query": "minecraft_user_info",
+        "refresh": 1,
+        "regex": "/.*username=\"(.*)\".*/",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      }
+    ]
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ]
+  },
+  "timezone": "",
+  "title": "Minecraft Users",
+  "uid": "gMGJUCqWz",
+  "version": 24
+}

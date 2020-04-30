@@ -3,8 +3,27 @@ minecraft-bot
 
 ![License](https://img.shields.io/github/license/ShotaKitazawa/minecraft-bot)
 ![test](https://github.com/ShotaKitazawa/minecraft-bot/workflows/test/badge.svg)
+![Go Report Card](https://goreportcard.com/badge/github.com/ShotaKitazawa/minecraft-bot)
 ![Dependabot](https://flat.badgen.net/dependabot/thepracticaldev/dev.to?icon=dependabot)
 ![Codecov](https://codecov.io/gh/ShotaKitazawa/minecraft-bot/branch/master/graph/badge.svg)
+
+
+minecraft-bot has the following features.
+
+* **notification Bot** : notify Minecraft login/logout events to some chat-tool (LINE/Slack/Discord)
+* **Prometheus exporter** : support some Minecraft metrics in Prometheus exporter format
+* **source is only RCON** : minecraft-bot is not required any Mod, not required reading Minecraft world data, only using RCON
+
+## Demo
+
+![demo.gif](./images/demo.gif)
+
+### Dashboard
+
+* using `./dashboard/minecraft_users.json`
+    * pre-install `vonage-status-panel` Panel Plugin
+
+![minecraft_users](./images/minecraft_users.png)
 
 ## Installation
 
@@ -35,7 +54,8 @@ Usage of minecraft-bot:
   -v=false: show application version
 ```
 
-### Example
+### Execution example
+
 
 * enable LINE Bot
     * run Bot on the same server as Minecraft
@@ -45,6 +65,7 @@ Usage of minecraft-bot:
 ```
 $ minecraft-bot -line-channel-secret=XXX -line-channel-token=XXX -line-group-id=XXX -rcon-host=127.0.0.1 -rcon-password=XXX -redis-host=127.0.0.1 -sharedmem-mode=redis
 ```
+
 
 ## Setup
 
