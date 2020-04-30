@@ -1,5 +1,5 @@
 package botplug
 
-type BotPluginSender interface {
+type BotSender interface {
 	SendTextMessage(string) error
 }

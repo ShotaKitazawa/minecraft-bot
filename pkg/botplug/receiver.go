@@ -2,7 +2,7 @@ package botplug
 
 import "time"
 
-type BotPluginReceiver interface {
+type BotPlugin interface {
 	ReceiveMessageEntry(*MessageInput) *MessageOutput
 	ReceiveMemberJoinEntry(*MessageInput) *MessageOutput
 }

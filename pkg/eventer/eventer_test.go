@@ -18,9 +18,9 @@ var (
 	minecraftHostnameForTest = `test`
 )
 
-func newForTest(sender botplug.BotPluginSender, m sharedmem.SharedMem, rcon rcon.RconClient) *Eventer {
+func newForTest(sender botplug.BotSender, m sharedmem.SharedMem, rcon rcon.RconClient) *Eventer {
 	return &Eventer{
-		BotPluginSender:   sender,
+		BotSender:         sender,
 		MinecraftHostname: minecraftHostnameForTest,
 		sharedMem:         m,
 		rcon:              rcon,
@@ -37,7 +37,7 @@ func TestEventer(t *testing.T) {
 		e, err := New(minecraftHostnameForTest, botSenderValid, sharedMemValid, rconValid, loggerForTest)
 		assert.Nil(t, err)
 		assert.Equal(t, e, &Eventer{
-			BotPluginSender:   botSenderValid,
+			BotSender:         botSenderValid,
 			MinecraftHostname: minecraftHostnameForTest,
 			sharedMem:         sharedMemValid,
 			rcon:              rconValid,
@@ -97,7 +97,7 @@ func TestEventer(t *testing.T) {
 				assert.Nil(t, e.job())
 			})
 		})
-		t.Run(`abnormal(BotPluginSender)`, func(t *testing.T) {
+		t.Run(`abnormal(BotSender)`, func(t *testing.T) {
 			t.Run(`numOfAllLoginUser:1,numOfCurrentLoginUser:0,numOfPreviousLoginUser:1`, func(t *testing.T) {
 				e := newForTest(
 					&mock.BotSenderMockInvalid{},
