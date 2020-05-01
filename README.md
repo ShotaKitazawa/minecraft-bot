@@ -115,7 +115,7 @@ mode = "redis"        # default: "local"
 $ minecraft-bot -f config.toml
 ```
 
-## Setup
+## Required pre-setup
 
 ### Minecraft Server Setup
 
@@ -127,16 +127,16 @@ rcon.password=[minecraftRconPassword]
 rcon.port=[minecraftRconPort]
 ```
 
-### Bot for LINE
+### setup Bot for LINE
 
 * Setup LINE `Messageing API` : https://developers.line.biz/console/
-    * Webhook URL: `https://<your_domain>/linebot`
+    * Webhook URL: `https://<your_domain>/<bot.line.endpoint>`
 
-### Bot for Slack
+### setup Bot for Slack
 
 TBD
 
-### Bot for Discord
+### setup Bot for Discord
 
 TBD
 
