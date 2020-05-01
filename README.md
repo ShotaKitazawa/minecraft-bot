@@ -5,7 +5,6 @@ minecraft-bot
 ![test](https://github.com/ShotaKitazawa/minecraft-bot/workflows/test/badge.svg)
 ![Go Report Card](https://goreportcard.com/badge/github.com/ShotaKitazawa/minecraft-bot)
 ![Dependabot](https://flat.badgen.net/dependabot/thepracticaldev/dev.to?icon=dependabot)
-![Codecov](https://codecov.io/gh/ShotaKitazawa/minecraft-bot/branch/master/graph/badge.svg)
 
 
 minecraft-bot has the following features.
