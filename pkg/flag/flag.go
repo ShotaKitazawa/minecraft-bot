@@ -26,7 +26,7 @@ func ArgParse(version, revision string) (*Config, error) {
 	fl.Parse(os.Args[1:])
 
 	if showVersion {
-		fmt.Printf(`version: %s (revision %s)\n`, version, revision)
+		fmt.Println(fmt.Sprintf(`version: %s (revision %s)`, version, revision))
 		os.Exit(1)
 	}
 	if tomlFilepath == "" {

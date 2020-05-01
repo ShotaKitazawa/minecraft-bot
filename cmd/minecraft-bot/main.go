@@ -43,7 +43,7 @@ func newLogger(loglevel string) *logrus.Logger {
 	case "error":
 		logger.SetLevel(logrus.ErrorLevel)
 	default:
-		panic(fmt.Errorf("newLogger: invalid arguments"))
+		logger.Fatal(fmt.Errorf("newLogger: invalid arguments"))
 	}
 	return logger
 }
@@ -53,13 +53,13 @@ func main() {
 
 	// parse arguments
 	conf, err := flag.ArgParse(Version, Revision)
-	// set logger
-	logger = newLogger(conf.LogLevel)
-
 	// error check of "parse arguments"
 	if err != nil {
-		logger.Fatal(err)
+		log.Fatal(err)
 	}
+
+	// set logger
+	logger = newLogger(conf.LogLevel)
 
 	// set LINE config
 	botReceiver, botSender, err := line.New(logger, conf.Bot.LINEConfig.ChannelSecret, conf.Bot.LINEConfig.ChannelToken, conf.Bot.LINEConfig.GroupIDs)
@@ -70,13 +70,13 @@ func main() {
 		case "local":
 			m, err := localmem.New(logger)
 			if err != nil {
-				panic(err)
+				logger.Fatal(err)
 			}
 			return m
 		case "redis":
 			m, err := redis.New(logger, conf.SharedMem.RedisConfig.Host, conf.SharedMem.RedisConfig.Port)
 			if err != nil {
-				panic(err)
+				logger.Fatal(err)
 			}
 			return m
 		default:
@@ -87,20 +87,20 @@ func main() {
 	// get rcon instance
 	rcon, err := rcon.New(conf.Rcon.Host, conf.Rcon.Port, conf.Rcon.Password)
 	if err != nil {
-		panic(err)
+		logger.Fatal(err)
 	}
 
 	// run eventer
 	eventer, err := eventer.New(conf.MinecraftHostname, botSender, m, rcon, logger)
 	if err != nil {
-		panic(err)
+		logger.Fatal(err)
 	}
 	go eventer.Run()
 
 	// run exporter
 	collector, err := exporter.New(m, logger)
 	if err != nil {
-		panic(err)
+		logger.Fatal(err)
 	}
 	prometheus.MustRegister(collector)
 	http.Handle("/metrics", promhttp.Handler())
@@ -110,8 +110,8 @@ func main() {
 		bot.New(conf.MinecraftHostname, m, rcon, logger),
 	).NewHandler()
 	if err != nil {
-		panic(err)
+		logger.Fatal(err)
 	}
 	http.Handle("/linebot", handler)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	logger.Fatal(http.ListenAndServe(":8080", nil))
 }
