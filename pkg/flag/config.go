@@ -19,8 +19,9 @@ type Config struct {
 }
 
 type BotConfig struct {
-	FeatureVirtualWorld bool       `toml:"feature-virtual-world"`
-	LINEConfig          LINEConfig `toml:"line"`
+	LINEConfig LINEConfig `toml:"line"`
+	// TBD
+	//FeatureVirtualWorld bool       `toml:"virtual-world"`
 	//LINEConfigs         []LINEConfig    `toml:"line"`
 	//SlackConfigs        []SlackConfig   `toml:"slack"`
 	//DiscordConfigs      []DiscordConfig `toml:"discord"`
@@ -119,7 +120,7 @@ func ValidateConfig(config *Config) error {
 	} else if !(config.SharedMem.Mode == "local" || config.SharedMem.Mode == "redis") {
 		return errors.New(`"sharedmem.mode" only support "local", and "redis"`)
 	}
-	if config.SharedMem.Mode == "redis" {
+	if config.SharedMem.Mode == `redis` {
 		if config.SharedMem.RedisConfig.Host == "" {
 			config.SharedMem.RedisConfig.Host = "127.0.0.1"
 		}
