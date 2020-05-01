@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/namsral/flag"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
@@ -15,6 +14,7 @@ import (
 	"github.com/ShotaKitazawa/minecraft-bot/pkg/botplug/line"
 	"github.com/ShotaKitazawa/minecraft-bot/pkg/eventer"
 	"github.com/ShotaKitazawa/minecraft-bot/pkg/exporter"
+	"github.com/ShotaKitazawa/minecraft-bot/pkg/flag"
 	"github.com/ShotaKitazawa/minecraft-bot/pkg/rcon"
 	"github.com/ShotaKitazawa/minecraft-bot/pkg/sharedmem"
 	"github.com/ShotaKitazawa/minecraft-bot/pkg/sharedmem/localmem"
@@ -43,88 +43,26 @@ func newLogger(loglevel string) *logrus.Logger {
 	case "error":
 		logger.SetLevel(logrus.ErrorLevel)
 	default:
-		panic(fmt.Errorf("newLogger: invalid arguments"))
+		logger.Fatal(fmt.Errorf("newLogger: invalid arguments"))
 	}
 	return logger
-}
-
-type argsConfig struct {
-	loglevel          string
-	channelSecret     string
-	channelToken      string
-	groupIDs          string
-	sharedmemMode     string
-	minecraftHostname string
-	redisHost         string
-	redisPort         int
-	rconHost          string
-	rconPort          int
-	rconPassword      string
-}
-
-func newArgsConfig() *argsConfig {
-	cfg := &argsConfig{}
-
-	fl := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	fl.StringVar(&cfg.loglevel, "log-level", "info", "Log Level (debug, info, warn, error)")
-	fl.StringVar(&cfg.channelSecret, "line-channel-secret", "", "LINE Bot's Channel Secret")
-	fl.StringVar(&cfg.channelToken, "line-channel-token", "", "LINE Bot's Channel Token")
-	fl.StringVar(&cfg.groupIDs, "line-group-id", "", "specified LINE Group ID, send push message to this Group")
-	fl.StringVar(&cfg.sharedmemMode, "sharedmem-mode", "local", `using Shared Memory ("local" or "redis")`)
-	fl.StringVar(&cfg.minecraftHostname, "minecraft-hostname", "", `Minecraft Hostname`)
-	fl.StringVar(&cfg.redisHost, "redis-host", "127.0.0.1", "Redis Host (enabled when sharedmem-mode=redis)")
-	fl.IntVar(&cfg.redisPort, "redis-port", 6379, "Redis Port (enabled when sharedmem-mode=redis)")
-	fl.StringVar(&cfg.rconHost, "rcon-host", "", "RCON Host")
-	fl.IntVar(&cfg.rconPort, "rcon-port", 25575, "RCON Port")
-	fl.StringVar(&cfg.rconPassword, "rcon-password", "", "RCON Password")
-
-	var showVersion bool
-	fl.BoolVar(&showVersion, "v", false, "show application version")
-	fl.Parse(os.Args[1:])
-
-	if showVersion {
-		fmt.Printf("version: %s (revision %s)", Version, Revision)
-	}
-
-	if cfg.channelSecret == "" ||
-		cfg.channelToken == "" ||
-		cfg.groupIDs == "" ||
-		cfg.rconHost == "" ||
-		cfg.rconPort == 0 ||
-		cfg.rconPassword == "" {
-		fmt.Println("not enough required fields")
-		os.Exit(2)
-	}
-
-	if !(cfg.sharedmemMode == "local" ||
-		cfg.sharedmemMode == "redis") {
-		fmt.Println("sharedmemMode mismatch")
-		os.Exit(2)
-
-	}
-
-	if !(cfg.loglevel == "debug" ||
-		cfg.loglevel == "info" ||
-		cfg.loglevel == "warn" ||
-		cfg.loglevel == "error") {
-		fmt.Println("log-level mismatch")
-		os.Exit(2)
-	}
-
-	return cfg
 }
 
 func main() {
 	var err error
 
-	// args parse
-	args := newArgsConfig()
+	// parse arguments
+	conf, err := flag.ArgParse(Version, Revision)
+	// error check of "parse arguments"
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// set logger
-	logger = newLogger(args.loglevel)
+	logger = newLogger(conf.LogLevel)
 
 	// set LINE config
-	botReceiver, botSender, err := line.New(logger, args.channelSecret, args.channelToken, args.groupIDs)
+	botReceiver, botSender, err := line.New(logger, conf.Bot.LINEConfig.ChannelSecret, conf.Bot.LINEConfig.ChannelToken, conf.Bot.LINEConfig.GroupIDs)
 
 	// run sharedMem & get sharedMem instance
 	m := func(sharedmemMode string) sharedmem.SharedMem {
@@ -132,48 +70,48 @@ func main() {
 		case "local":
 			m, err := localmem.New(logger)
 			if err != nil {
-				panic(err)
+				logger.Fatal(err)
 			}
 			return m
 		case "redis":
-			m, err := redis.New(logger, args.redisHost, args.redisPort)
+			m, err := redis.New(logger, conf.SharedMem.RedisConfig.Host, conf.SharedMem.RedisConfig.Port)
 			if err != nil {
-				panic(err)
+				logger.Fatal(err)
 			}
 			return m
 		default:
 			panic(fmt.Errorf("sharedmemMode mismatch"))
 		}
-	}(args.sharedmemMode)
+	}(conf.SharedMem.Mode)
 
 	// get rcon instance
-	rcon, err := rcon.New(args.rconHost, args.rconPort, args.rconPassword)
+	rcon, err := rcon.New(conf.Rcon.Host, conf.Rcon.Port, conf.Rcon.Password)
 	if err != nil {
-		panic(err)
+		logger.Fatal(err)
 	}
 
 	// run eventer
-	eventer, err := eventer.New(args.minecraftHostname, botSender, m, rcon, logger)
+	eventer, err := eventer.New(conf.MinecraftHostname, botSender, m, rcon, logger)
 	if err != nil {
-		panic(err)
+		logger.Fatal(err)
 	}
 	go eventer.Run()
 
 	// run exporter
 	collector, err := exporter.New(m, logger)
 	if err != nil {
-		panic(err)
+		logger.Fatal(err)
 	}
 	prometheus.MustRegister(collector)
 	http.Handle("/metrics", promhttp.Handler())
 
 	// run bot
 	handler, err := botReceiver.WithPlugin(
-		bot.New(args.minecraftHostname, m, rcon, logger),
+		bot.New(conf.MinecraftHostname, m, rcon, logger),
 	).NewHandler()
 	if err != nil {
-		panic(err)
+		logger.Fatal(err)
 	}
 	http.Handle("/linebot", handler)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	logger.Fatal(http.ListenAndServe(":8080", nil))
 }

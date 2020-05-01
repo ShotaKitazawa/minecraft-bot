@@ -40,32 +40,81 @@ go get -u github.com/ShotaKitazawa/minecraft-bot/cmd/minecraft-bot
 ```
 $ minecraft-bot -h
 Usage of minecraft-bot:
-  -line-channel-secret="": LINE Bot's Channel Secret
-  -line-channel-token="": LINE Bot's Channel Token
-  -line-group-id="": specified LINE Group ID, send push message to this Group
-  -log-level="info": Log Level (debug, info, warn, error)
-  -minecraft-hostname="": Minecraft Hostname
-  -rcon-host="": RCON Host
-  -rcon-password="": RCON Password
-  -rcon-port=25575: RCON Port
-  -redis-host="127.0.0.1": Redis Host (enabled when sharedmem-mode=redis)
-  -redis-port=6379: Redis Port (enabled when sharedmem-mode=redis)
-  -sharedmem-mode="local": using Shared Memory ("local" or "redis")
-  -v=false: show application version
+  -f string
+        TOML configuration filepath
+  -v    show application version
+```
+
+* TOML Configuration File
+
+```
+# Minecraft Server Hostname (requirement)
+minecraft-hostname = "minecraft.kanatakita.com"
+
+# basic setting (option)
+bind-addr = "0.0.0.0"  # default: "0.0.0.0"
+bind-port = 8080       # default: 8080
+log-level = "info"     # default: "info"
+
+
+[bot.line]
+# LINE Configuration (requirement)
+endpoint = "/linebot"
+channel-secret = "XXX"
+channel-token = "XXX"
+
+# LINE Configuration (option, but cannot push notification without this)
+group-ids = "XXX"
+
+
+[rcon]
+# connect in RCON to Minecraft (requirement)
+host = "127.0.0.1"    # default: "127.0.0.1"
+port = 25575          # default: 25575
+
+# RCON password (requirement)
+password = "XXX"
+
+
+[sharedmem]
+# place to store state (only "redis" (recommended) or "local")
+mode = "redis"        # default: "local"
+
+
+[sharedmem.redis]
+# Redis info (option if sharedmem.mode == "redis")
+host = "127.0.0.1"    # default: "127.0.0.1"
+port = 6379           # default: 6379
 ```
 
 ### Execution example
 
-
 * enable LINE Bot
-    * run Bot on the same server as Minecraft
 * using Redis in sharedmem
-    * run Bot on the same server as Redis
+* minecraft-bot, Minecraft, Redis exist in the same server
 
 ```
-$ minecraft-bot -line-channel-secret=XXX -line-channel-token=XXX -line-group-id=XXX -rcon-host=127.0.0.1 -rcon-password=XXX -redis-host=127.0.0.1 -sharedmem-mode=redis
+$ cat config.toml
+minecraft-hostname = "your_domain"
+
+[bot.line]
+endpoint = "/linebot"
+channel-secret = "XXX"
+channel-token = "XXX"
+group-ids = "XXX"
+
+[rcon]
+password = "XXX"
+
+[sharedmem]
+mode = "redis"        # default: "local"
 ```
 
+* run `minecraft-bot`
+
+```
+$ minecraft-bot -f config.toml
+```
 
 ## Setup
 
@@ -79,15 +128,6 @@ rcon.password=[minecraftRconPassword]
 rcon.port=[minecraftRconPort]
 ```
 
-### Bot do not support HTTPS
-
-This bot run HTTP server, but Webhook configuration required HTTPS in most chat-provider.
-Please following the below.
-
-* using HTTPS reverse-proxy server (nginx, Caddy, etc..) & run Bot beside Minecraft server
-* using PaaS (Heroku, Google App Engine, etc..)
-    * not recommended (RCON connection is not crypted)
-
 ### Bot for LINE
 
 * Setup LINE `Messageing API` : https://developers.line.biz/console/
@@ -100,6 +140,15 @@ TBD
 ### Bot for Discord
 
 TBD
+
+### Bot needs to support HTTPS separately
+
+This bot run HTTP server, but Webhook configuration required HTTPS in most chat-provider.
+Please following the below.
+
+* using HTTPS reverse-proxy server (nginx, Caddy, etc..) & run Bot beside Minecraft server
+* using PaaS (Heroku, Google App Engine, etc..)
+    * not recommended (RCON connection is not crypted)
 
 ## Architecture
 
