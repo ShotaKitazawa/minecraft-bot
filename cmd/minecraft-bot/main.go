@@ -11,6 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/ShotaKitazawa/minecraft-bot/pkg/bot"
+	"github.com/ShotaKitazawa/minecraft-bot/pkg/botplug"
 	"github.com/ShotaKitazawa/minecraft-bot/pkg/botplug/line"
 	"github.com/ShotaKitazawa/minecraft-bot/pkg/eventer"
 	"github.com/ShotaKitazawa/minecraft-bot/pkg/exporter"
@@ -61,8 +62,26 @@ func main() {
 	// set logger
 	logger = newLogger(conf.LogLevel)
 
+	// init Bot
+	type LINEBotIO struct {
+		Endpoint string
+		Receiver *line.BotReceiver
+		Sender   botplug.BotSender
+	}
+	bots := []LINEBotIO{}
+
 	// set LINE config
-	botReceiver, botSender, err := line.New(logger, conf.Bot.LINEConfig.ChannelSecret, conf.Bot.LINEConfig.ChannelToken, conf.Bot.LINEConfig.GroupIDs)
+	for _, lineConfig := range conf.Bot.LINEConfigs {
+		botReceiver, botSender, err := line.New(logger, lineConfig.ChannelSecret, lineConfig.ChannelToken, lineConfig.GroupIDs)
+		if err != nil {
+			logger.Fatal(err)
+		}
+		bots = append(bots, LINEBotIO{
+			Endpoint: lineConfig.Endpoint,
+			Receiver: botReceiver,
+			Sender:   botSender,
+		})
+	}
 
 	// run sharedMem & get sharedMem instance
 	m := func(sharedmemMode string) sharedmem.SharedMem {
@@ -91,11 +110,13 @@ func main() {
 	}
 
 	// run eventer
-	eventer, err := eventer.New(conf.MinecraftHostname, botSender, m, rcon, logger)
-	if err != nil {
-		logger.Fatal(err)
+	for _, botInstance := range bots {
+		eventer, err := eventer.New(conf.MinecraftHostname, botInstance.Sender, m, rcon, logger)
+		if err != nil {
+			logger.Fatal(err)
+		}
+		go eventer.Run()
 	}
-	go eventer.Run()
 
 	// run exporter
 	collector, err := exporter.New(m, logger)
@@ -106,12 +127,15 @@ func main() {
 	http.Handle("/metrics", promhttp.Handler())
 
 	// run bot
-	handler, err := botReceiver.WithPlugin(
-		bot.New(conf.MinecraftHostname, m, rcon, logger),
-	).NewHandler()
-	if err != nil {
-		logger.Fatal(err)
+	for _, botInstance := range bots {
+		handler, err := botInstance.Receiver.WithPlugin(
+			bot.New(conf.MinecraftHostname, m, rcon, logger),
+		).NewHandler()
+		if err != nil {
+			logger.Fatal(err)
+		}
+		http.Handle(botInstance.Endpoint, handler)
 	}
-	http.Handle("/linebot", handler)
+
 	logger.Fatal(http.ListenAndServe(":8080", nil))
 }

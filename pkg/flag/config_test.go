@@ -33,10 +33,10 @@ func TestConfig(t *testing.T) {
 			assert.Equal(t, bindAddrForTest, conf.BindAddr)
 			assert.Equal(t, bindPortForTest, conf.BindPort)
 			assert.Equal(t, minecraftHostnameForTest, conf.MinecraftHostname)
-			assert.Equal(t, botLINEEndpointForTest, conf.Bot.LINEConfig.Endpoint)
-			assert.Equal(t, botLINEChannelSecretForTest, conf.Bot.LINEConfig.ChannelSecret)
-			assert.Equal(t, botLINEChannelTokenForTest, conf.Bot.LINEConfig.ChannelToken)
-			assert.Equal(t, botLINEGroupIDForTest, conf.Bot.LINEConfig.GroupIDs)
+			assert.Equal(t, botLINEEndpointForTest, conf.Bot.LINEConfigs[0].Endpoint)
+			assert.Equal(t, botLINEChannelSecretForTest, conf.Bot.LINEConfigs[0].ChannelSecret)
+			assert.Equal(t, botLINEChannelTokenForTest, conf.Bot.LINEConfigs[0].ChannelToken)
+			assert.Equal(t, botLINEGroupIDForTest, conf.Bot.LINEConfigs[0].GroupIDs)
 			assert.Equal(t, rconHostForTest, conf.Rcon.Host)
 			assert.Equal(t, rconPortForTest, conf.Rcon.Port)
 			assert.Equal(t, rconPasswordForTest, conf.Rcon.Password)
@@ -57,10 +57,37 @@ func TestConfig(t *testing.T) {
 			conf := &Config{
 				MinecraftHostname: minecraftHostnameForTest,
 				Bot: BotConfig{
-					LINEConfig: LINEConfig{
+					LINEConfigs: []LINEConfig{{
 						Endpoint:      botLINEEndpointForTest,
 						ChannelSecret: botLINEChannelSecretForTest,
 						ChannelToken:  botLINEChannelTokenForTest,
+					}},
+				},
+				Rcon: RconConfig{
+					Password: rconPasswordForTest,
+				},
+				SharedMem: SharedMemConfig{
+					Mode: sharedmemModeForTest,
+				},
+			}
+			err := ValidateConfig(conf)
+			assert.Nil(t, err)
+		})
+		t.Run(`valid: 2 LINE configs`, func(t *testing.T) {
+			conf := &Config{
+				MinecraftHostname: minecraftHostnameForTest,
+				Bot: BotConfig{
+					LINEConfigs: []LINEConfig{
+						{
+							Endpoint:      botLINEEndpointForTest,
+							ChannelSecret: botLINEChannelSecretForTest,
+							ChannelToken:  botLINEChannelTokenForTest,
+						},
+						{
+							Endpoint:      botLINEEndpointForTest,
+							ChannelSecret: botLINEChannelSecretForTest,
+							ChannelToken:  botLINEChannelTokenForTest,
+						},
 					},
 				},
 				Rcon: RconConfig{
@@ -73,14 +100,14 @@ func TestConfig(t *testing.T) {
 			err := ValidateConfig(conf)
 			assert.Nil(t, err)
 		})
-		t.Run(`invalid: [minecraft-hostname] is empty`, func(t *testing.T) {
+		t.Run(`invalid: .minecraft-hostname is empty`, func(t *testing.T) {
 			conf := &Config{
 				Bot: BotConfig{
-					LINEConfig: LINEConfig{
+					LINEConfigs: []LINEConfig{{
 						Endpoint:      botLINEEndpointForTest,
 						ChannelSecret: botLINEChannelSecretForTest,
 						ChannelToken:  botLINEChannelTokenForTest,
-					},
+					}},
 				},
 				Rcon: RconConfig{
 					Password: rconPasswordForTest,
@@ -92,16 +119,16 @@ func TestConfig(t *testing.T) {
 			err := ValidateConfig(conf)
 			assert.NotNil(t, err)
 		})
-		t.Run(`invalid: [log-level] is invalid`, func(t *testing.T) {
+		t.Run(`invalid: .log-level is invalid`, func(t *testing.T) {
 			conf := &Config{
 				LogLevel:          `invalid`,
 				MinecraftHostname: minecraftHostnameForTest,
 				Bot: BotConfig{
-					LINEConfig: LINEConfig{
+					LINEConfigs: []LINEConfig{{
 						Endpoint:      botLINEEndpointForTest,
 						ChannelSecret: botLINEChannelSecretForTest,
 						ChannelToken:  botLINEChannelTokenForTest,
-					},
+					}},
 				},
 				Rcon: RconConfig{
 					Password: rconPasswordForTest,
@@ -113,11 +140,16 @@ func TestConfig(t *testing.T) {
 			err := ValidateConfig(conf)
 			assert.NotNil(t, err)
 		})
-		t.Run(`invalid: [bot.line] is empty`, func(t *testing.T) {
+		t.Run(`invalid: .bot.line[].endpoint is empty`, func(t *testing.T) {
 			conf := &Config{
 				MinecraftHostname: minecraftHostnameForTest,
 				Bot: BotConfig{
-					LINEConfig: LINEConfig{},
+					LINEConfigs: []LINEConfig{{
+						// Endpoint:      botLINEEndpointForTest, // invalid
+						ChannelSecret: botLINEChannelSecretForTest,
+						ChannelToken:  botLINEChannelTokenForTest,
+						GroupIDs:      botLINEGroupIDForTest,
+					}},
 				},
 				Rcon: RconConfig{
 					Password: rconPasswordForTest,
@@ -129,15 +161,15 @@ func TestConfig(t *testing.T) {
 			err := ValidateConfig(conf)
 			assert.NotNil(t, err)
 		})
-		t.Run(`invalid: [bot.rcon.password] is empty`, func(t *testing.T) {
+		t.Run(`invalid: .bot.rcon.password is empty`, func(t *testing.T) {
 			conf := &Config{
 				MinecraftHostname: minecraftHostnameForTest,
 				Bot: BotConfig{
-					LINEConfig: LINEConfig{
+					LINEConfigs: []LINEConfig{{
 						Endpoint:      botLINEEndpointForTest,
 						ChannelSecret: botLINEChannelSecretForTest,
 						ChannelToken:  botLINEChannelTokenForTest,
-					},
+					}},
 				},
 				Rcon: RconConfig{},
 				SharedMem: SharedMemConfig{
@@ -147,15 +179,15 @@ func TestConfig(t *testing.T) {
 			err := ValidateConfig(conf)
 			assert.NotNil(t, err)
 		})
-		t.Run(`invalid: [bot.sharedmem.mode] is invalid`, func(t *testing.T) {
+		t.Run(`invalid: .bot.sharedmem.mode is invalid`, func(t *testing.T) {
 			conf := &Config{
 				MinecraftHostname: minecraftHostnameForTest,
 				Bot: BotConfig{
-					LINEConfig: LINEConfig{
+					LINEConfigs: []LINEConfig{{
 						Endpoint:      botLINEEndpointForTest,
 						ChannelSecret: botLINEChannelSecretForTest,
 						ChannelToken:  botLINEChannelTokenForTest,
-					},
+					}},
 				},
 				Rcon: RconConfig{
 					Password: rconPasswordForTest,
@@ -187,7 +219,7 @@ bind-addr = "%s"
 bind-port = %d
 minecraft-hostname = "%s"
 
-[bot.line]
+[[bot.line]]
 endpoint = "%s"
 channel-secret = "%s"
 channel-token = "%s"
