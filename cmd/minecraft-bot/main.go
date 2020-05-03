@@ -110,13 +110,11 @@ func main() {
 	}
 
 	// run eventer
-	for _, botInstance := range bots {
-		eventer, err := eventer.New(conf.MinecraftHostname, botInstance.Sender, m, rcon, logger)
-		if err != nil {
-			logger.Fatal(err)
-		}
-		go eventer.Run()
+	eventer, err := eventer.New(conf.MinecraftHostname, m, rcon, logger)
+	if err != nil {
+		logger.Fatal(err)
 	}
+	go eventer.Run()
 
 	// run exporter
 	collector, err := exporter.New(m, logger)
