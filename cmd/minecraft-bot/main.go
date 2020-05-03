@@ -11,7 +11,6 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/ShotaKitazawa/minecraft-bot/pkg/bot"
-	"github.com/ShotaKitazawa/minecraft-bot/pkg/botplug"
 	"github.com/ShotaKitazawa/minecraft-bot/pkg/botplug/line"
 	"github.com/ShotaKitazawa/minecraft-bot/pkg/eventer"
 	"github.com/ShotaKitazawa/minecraft-bot/pkg/exporter"
@@ -54,7 +53,6 @@ func main() {
 
 	// parse arguments
 	conf, err := flag.ArgParse(Version, Revision)
-	// error check of "parse arguments"
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -62,25 +60,14 @@ func main() {
 	// set logger
 	logger = newLogger(conf.LogLevel)
 
-	// init Bot
-	type LINEBotIO struct {
-		Endpoint string
-		Receiver *line.BotReceiver
-		Sender   botplug.BotSender
-	}
-	bots := []LINEBotIO{}
-
 	// set LINE config
+	var bots []*line.BotAdaptor
 	for _, lineConfig := range conf.Bot.LINEConfigs {
-		botReceiver, botSender, err := line.New(logger, lineConfig.ChannelSecret, lineConfig.ChannelToken, lineConfig.GroupIDs)
+		bot, err := line.New(logger, lineConfig.Endpoint, lineConfig.ChannelSecret, lineConfig.ChannelToken, lineConfig.GroupIDs)
 		if err != nil {
 			logger.Fatal(err)
 		}
-		bots = append(bots, LINEBotIO{
-			Endpoint: lineConfig.Endpoint,
-			Receiver: botReceiver,
-			Sender:   botSender,
-		})
+		bots = append(bots, bot)
 	}
 
 	// run sharedMem & get sharedMem instance
@@ -126,7 +113,7 @@ func main() {
 
 	// run bot
 	for _, botInstance := range bots {
-		handler, err := botInstance.Receiver.WithPlugin(
+		handler, err := botInstance.WithPlugin(
 			bot.New(conf.MinecraftHostname, m, rcon, logger),
 		).NewHandler()
 		if err != nil {

@@ -21,7 +21,8 @@ type SharedMem struct {
 	sendStreamMessage    chan<- domain.Message
 	receiveStreamMessage <-chan domain.Message
 	Conn                 redis.Conn
-	PubSubMsgConn        redis.PubSubConn
+	PubMsgConn           redis.PubSubConn
+	SubMsgConn           redis.PubSubConn
 	redisHostname        string
 }
 
@@ -33,8 +34,13 @@ func New(logger *logrus.Logger, addr string, port int) (*SharedMem, error) {
 	if err != nil {
 		return nil, err
 	}
-	psc := redis.PubSubConn{Conn: c}
-	psc.Subscribe(pubsubMsgChannelName)
+	pubconn := redis.PubSubConn{Conn: c}
+	clientForSubscribe, err := redis.Dial("tcp", redisHostname)
+	if err != nil {
+		return nil, err
+	}
+	subconn := redis.PubSubConn{Conn: clientForSubscribe}
+	subconn.Subscribe(pubsubMsgChannelName)
 	m := &SharedMem{
 		logger:               logger,
 		sendStreamEntity:     streamEntity,
@@ -42,7 +48,8 @@ func New(logger *logrus.Logger, addr string, port int) (*SharedMem, error) {
 		sendStreamMessage:    streamQueue,
 		receiveStreamMessage: streamQueue,
 		Conn:                 c,
-		PubSubMsgConn:        psc,
+		PubMsgConn:           pubconn,
+		SubMsgConn:           subconn,
 		redisHostname:        redisHostname,
 	}
 	go m.receiveFromChannelAndWriteSharedMem()
@@ -114,7 +121,7 @@ func (m *SharedMem) AsyncPublishMessage(data domain.Message) error {
 
 func (m *SharedMem) SyncSubscribeMessage() (domain.Message, error) {
 	message := domain.Message{}
-	switch v := m.PubSubMsgConn.Receive().(type) {
+	switch v := m.SubMsgConn.Receive().(type) {
 	case redis.Message:
 		if err := json.Unmarshal(v.Data, &message); err != nil {
 			m.logger.Error(err)

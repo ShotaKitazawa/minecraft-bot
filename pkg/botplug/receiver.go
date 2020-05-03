@@ -5,6 +5,7 @@ import "time"
 type BotPlugin interface {
 	ReceiveMessageEntry(*MessageInput) *MessageOutput
 	ReceiveMemberJoinEntry(*MessageInput) *MessageOutput
+	PushMessageEntry() *MessageOutput
 }
 
 type MessageInput struct {
