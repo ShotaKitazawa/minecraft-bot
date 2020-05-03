@@ -6,10 +6,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ShotaKitazawa/minecraft-bot/pkg/domain"
 	"github.com/alicebob/miniredis"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/ShotaKitazawa/minecraft-bot/pkg/domain"
 )
 
 var (
@@ -54,4 +55,27 @@ func TestRedis(t *testing.T) {
 		assert.NotNil(t, err)
 	})
 
+	/* MEMO: ERR unknown command `PUBLISH` & `SUBSCRIBE`
+	t.Run(`publish & subscribe domain.Message`, func(t *testing.T) {
+		t.Run(`SyncSubscribeMessage & AsyncPublishMessage`, func(t *testing.T) {
+			m := NewMockRedis(t)
+			testData := domain.Message{
+				UserID: `hoge`,
+				Msg:    `fuga`,
+			}
+			var flag int
+			go func() {
+				flag = 0
+				readData, err := m.SyncSubscribeMessage()
+				flag = 1
+				assert.Nil(t, err)
+				assert.Equal(t, testData, readData)
+			}()
+			assert.Equal(t, flag, 0)
+			m.AsyncPublishMessage(testData)
+			time.Sleep(time.Millisecond)
+			assert.Equal(t, flag, 1)
+		})
+	})
+	*/
 }

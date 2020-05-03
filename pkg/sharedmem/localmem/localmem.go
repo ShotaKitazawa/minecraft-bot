@@ -13,18 +13,28 @@ var (
 )
 
 type SharedMem struct {
-	logger        *logrus.Logger
-	sendStream    chan<- domain.Entity
-	receiveStream <-chan domain.Entity
-	sharedMemory  *domain.Entity
+	logger               *logrus.Logger
+	sendStreamEntity     chan<- domain.Entity
+	receiveStreamEntity  <-chan domain.Entity
+	sendStreamMessage    chan<- domain.Message
+	receiveStreamMessage <-chan domain.Message
+	publishMessage       chan<- domain.Message
+	subscribeMessage     <-chan domain.Message
+	sharedMemoryEntity   *domain.Entity
 }
 
 func New(logger *logrus.Logger) (*SharedMem, error) {
-	stream := make(chan domain.Entity)
+	streamEntity := make(chan domain.Entity)
+	streamQueue := make(chan domain.Message)
+	streamPubSubMsg := make(chan domain.Message)
 	m := &SharedMem{
-		logger:        logger,
-		sendStream:    stream,
-		receiveStream: stream,
+		logger:               logger,
+		sendStreamEntity:     streamEntity,
+		receiveStreamEntity:  streamEntity,
+		sendStreamMessage:    streamQueue,
+		receiveStreamMessage: streamQueue,
+		publishMessage:       streamPubSubMsg,
+		subscribeMessage:     streamPubSubMsg,
 	}
 	go m.receiveFromChannelAndWriteSharedMem()
 	return m, nil
@@ -32,7 +42,7 @@ func New(logger *logrus.Logger) (*SharedMem, error) {
 
 func (m *SharedMem) SyncReadEntityFromSharedMem() (domain.Entity, error) {
 	mu.Lock()
-	result := m.sharedMemory
+	result := m.sharedMemoryEntity
 	mu.Unlock()
 	if result == nil {
 		return domain.Entity{}, fmt.Errorf("no such data")
@@ -41,18 +51,31 @@ func (m *SharedMem) SyncReadEntityFromSharedMem() (domain.Entity, error) {
 }
 
 func (m *SharedMem) AsyncWriteEntityToSharedMem(data domain.Entity) error {
-	m.sendStream <- data
+	m.sendStreamEntity <- data
 	return nil
 }
 
 func (m *SharedMem) receiveFromChannelAndWriteSharedMem() error {
 	for {
 		select {
-		case d := <-m.receiveStream:
+		case d := <-m.receiveStreamEntity:
 			mu.Lock()
-			m.sharedMemory = &d
+			m.sharedMemoryEntity = &d
 			mu.Unlock()
+		case d := <-m.receiveStreamMessage:
+			go func() {
+				m.sendStreamMessage <- d
+			}()
 		}
 	}
 	// return nil
+}
+
+func (m *SharedMem) AsyncPublishMessage(data domain.Message) error {
+	m.sendStreamMessage <- data
+	return nil
+}
+func (m *SharedMem) SyncSubscribeMessage() (domain.Message, error) {
+	result := <-m.receiveStreamMessage
+	return result, nil
 }

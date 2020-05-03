@@ -10,31 +10,55 @@ import (
 	"github.com/ShotaKitazawa/minecraft-bot/pkg/domain"
 )
 
+var (
+	pubsubMsgChannelName = `message`
+)
+
 type SharedMem struct {
-	logger        *logrus.Logger
-	sendStream    chan<- domain.Entity
-	receiveStream <-chan domain.Entity
-	Conn          redis.Conn
-	redisHostname string
+	logger               *logrus.Logger
+	sendStreamEntity     chan<- domain.Entity
+	receiveStreamEntity  <-chan domain.Entity
+	sendStreamMessage    chan<- domain.Message
+	receiveStreamMessage <-chan domain.Message
+	Conn                 redis.Conn
+	PubSubMsgConn        redis.PubSubConn
+	redisHostname        string
 }
 
 func New(logger *logrus.Logger, addr string, port int) (*SharedMem, error) {
-	stream := make(chan domain.Entity)
+	streamEntity := make(chan domain.Entity)
+	streamQueue := make(chan domain.Message)
 	redisHostname := addr + ":" + strconv.Itoa(port)
 	c, err := redis.Dial("tcp", redisHostname)
 	if err != nil {
 		return nil, err
 	}
+	psc := redis.PubSubConn{Conn: c}
+	psc.Subscribe(pubsubMsgChannelName)
 	m := &SharedMem{
-		logger:        logger,
-		sendStream:    stream,
-		receiveStream: stream,
-		Conn:          c,
-		redisHostname: redisHostname,
+		logger:               logger,
+		sendStreamEntity:     streamEntity,
+		receiveStreamEntity:  streamEntity,
+		sendStreamMessage:    streamQueue,
+		receiveStreamMessage: streamQueue,
+		Conn:                 c,
+		PubSubMsgConn:        psc,
+		redisHostname:        redisHostname,
 	}
 	go m.receiveFromChannelAndWriteSharedMem()
 	return m, nil
 }
+
+/* TODO
+func (m *SharedMem) reconnect() error {
+	c, err := redis.Dial("tcp", m.redisHostname)
+	if err != nil {
+		return err
+	}
+	m.Conn = c
+	return nil
+}
+*/
 
 func (m *SharedMem) SyncReadEntityFromSharedMem() (domain.Entity, error) {
 	data, err := redis.Bytes(m.Conn.Do("GET", "entity"))
@@ -51,14 +75,14 @@ func (m *SharedMem) SyncReadEntityFromSharedMem() (domain.Entity, error) {
 }
 
 func (m *SharedMem) AsyncWriteEntityToSharedMem(data domain.Entity) error {
-	m.sendStream <- data
+	m.sendStreamEntity <- data
 	return nil
 }
 
 func (m *SharedMem) receiveFromChannelAndWriteSharedMem() error {
 	for {
 		select {
-		case d := <-m.receiveStream:
+		case d := <-m.receiveStreamEntity:
 			data, err := json.Marshal(&d)
 			if err != nil {
 				return err
@@ -68,18 +92,38 @@ func (m *SharedMem) receiveFromChannelAndWriteSharedMem() error {
 				m.logger.Error(err)
 				return err
 			}
+		case d := <-m.receiveStreamMessage:
+			data, err := json.Marshal(&d)
+			if err != nil {
+				return err
+			}
+			_, err = m.Conn.Do("PUBLISH", pubsubMsgChannelName, data)
+			if err != nil {
+				m.logger.Error(err)
+				return err
+			}
 		}
 	}
 	// return nil
 }
 
-/* TODO
-func (m *SharedMem) reconnect() error {
-	c, err := redis.Dial("tcp", m.redisHostname)
-	if err != nil {
-		return err
-	}
-	m.Conn = c
+func (m *SharedMem) AsyncPublishMessage(data domain.Message) error {
+	m.sendStreamMessage <- data
 	return nil
 }
-*/
+func (m *SharedMem) SyncSubscribeMessage() (domain.Message, error) {
+	message := domain.Message{}
+	switch v := m.PubSubMsgConn.Receive().(type) {
+	case redis.Message:
+		if err := json.Unmarshal(v.Data, &message); err != nil {
+			m.logger.Error(err)
+			return domain.Message{}, err
+		}
+		// case redis.Subscription:
+		// 	break
+		// case error:
+		// 	return
+	}
+
+	return message, nil
+}
