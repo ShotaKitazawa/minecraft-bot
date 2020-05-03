@@ -73,10 +73,10 @@ func (e *Eventer) job() error {
 	}
 
 	// get logged in users from SharedMem
-	previousData, err := e.sharedMem.SyncReadEntityFromSharedMem()
+	previousData, err := e.sharedMem.SyncReadEntity()
 	if err != nil {
 		// write to sharedMem & return
-		return e.sharedMem.AsyncWriteEntityToSharedMem(currentData)
+		return e.sharedMem.AsyncWriteEntity(currentData)
 	}
 
 	// create previousLoginUsernameSet
@@ -116,7 +116,7 @@ func (e *Eventer) job() error {
 	}
 
 	// write to sharedMem
-	e.sharedMem.AsyncWriteEntityToSharedMem(currentData)
+	e.sharedMem.AsyncWriteEntity(currentData)
 
 	return nil
 }

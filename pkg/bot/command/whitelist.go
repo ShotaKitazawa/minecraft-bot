@@ -75,7 +75,7 @@ func (p PluginWhitelist) list() []interface{} {
 	var queue []interface{}
 
 	// read data from SharedMem
-	data, err := p.SharedMem.SyncReadEntityFromSharedMem()
+	data, err := p.SharedMem.SyncReadEntity()
 	if err != nil {
 		p.Logger.Error(err)
 		queue = append(queue, i18n.T.Sprintf(i18n.MessageError))

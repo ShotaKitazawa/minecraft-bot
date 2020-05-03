@@ -42,16 +42,16 @@ func TestRedis(t *testing.T) {
 	t.Run(`AsyncWriteEntity && SyncReadEntity`, func(t *testing.T) {
 		m := NewMockRedis(t)
 		testData := domain.Entity{AllUsers: []domain.User{{Name: `test`}}}
-		m.AsyncWriteEntityToSharedMem(testData)
+		m.AsyncWriteEntity(testData)
 		time.Sleep(time.Second)
-		readData, err := m.SyncReadEntityFromSharedMem()
+		readData, err := m.SyncReadEntity()
 		assert.Nil(t, err)
 		assert.Equal(t, testData, readData)
 	})
 
 	t.Run(`SyncReadEntity (data is nil)`, func(t *testing.T) {
 		m := NewMockRedis(t)
-		_, err := m.SyncReadEntityFromSharedMem()
+		_, err := m.SyncReadEntity()
 		assert.NotNil(t, err)
 	})
 

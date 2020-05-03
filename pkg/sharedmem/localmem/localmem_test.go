@@ -28,16 +28,16 @@ func TestLocalMem(t *testing.T) {
 		t.Run(`AsyncWriteEntity && SyncReadEntity`, func(t *testing.T) {
 			m := NewLocalMemForTest()
 			testData := domain.Entity{AllUsers: []domain.User{{Name: `test`}}}
-			m.AsyncWriteEntityToSharedMem(testData)
+			m.AsyncWriteEntity(testData)
 			time.Sleep(time.Millisecond)
-			readData, err := m.SyncReadEntityFromSharedMem()
+			readData, err := m.SyncReadEntity()
 			assert.Nil(t, err)
 			assert.Equal(t, testData, readData)
 		})
 
 		t.Run(`SyncReadEntity (data is nil)`, func(t *testing.T) {
 			m := NewLocalMemForTest()
-			_, err := m.SyncReadEntityFromSharedMem()
+			_, err := m.SyncReadEntity()
 			assert.NotNil(t, err)
 		})
 

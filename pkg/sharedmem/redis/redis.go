@@ -60,25 +60,6 @@ func (m *SharedMem) reconnect() error {
 }
 */
 
-func (m *SharedMem) SyncReadEntityFromSharedMem() (domain.Entity, error) {
-	data, err := redis.Bytes(m.Conn.Do("GET", "entity"))
-	if err != nil {
-		m.logger.Error(err)
-		return domain.Entity{}, err
-	}
-	entity := domain.Entity{}
-	if err := json.Unmarshal(data, &entity); err != nil {
-		m.logger.Error(err)
-		return domain.Entity{}, err
-	}
-	return entity, nil
-}
-
-func (m *SharedMem) AsyncWriteEntityToSharedMem(data domain.Entity) error {
-	m.sendStreamEntity <- data
-	return nil
-}
-
 func (m *SharedMem) receiveFromChannelAndWriteSharedMem() error {
 	for {
 		select {
@@ -107,10 +88,30 @@ func (m *SharedMem) receiveFromChannelAndWriteSharedMem() error {
 	// return nil
 }
 
+func (m *SharedMem) SyncReadEntity() (domain.Entity, error) {
+	data, err := redis.Bytes(m.Conn.Do("GET", "entity"))
+	if err != nil {
+		m.logger.Error(err)
+		return domain.Entity{}, err
+	}
+	entity := domain.Entity{}
+	if err := json.Unmarshal(data, &entity); err != nil {
+		m.logger.Error(err)
+		return domain.Entity{}, err
+	}
+	return entity, nil
+}
+
+func (m *SharedMem) AsyncWriteEntity(data domain.Entity) error {
+	m.sendStreamEntity <- data
+	return nil
+}
+
 func (m *SharedMem) AsyncPublishMessage(data domain.Message) error {
 	m.sendStreamMessage <- data
 	return nil
 }
+
 func (m *SharedMem) SyncSubscribeMessage() (domain.Message, error) {
 	message := domain.Message{}
 	switch v := m.PubSubMsgConn.Receive().(type) {

@@ -40,21 +40,6 @@ func New(logger *logrus.Logger) (*SharedMem, error) {
 	return m, nil
 }
 
-func (m *SharedMem) SyncReadEntityFromSharedMem() (domain.Entity, error) {
-	mu.Lock()
-	result := m.sharedMemoryEntity
-	mu.Unlock()
-	if result == nil {
-		return domain.Entity{}, fmt.Errorf("no such data")
-	}
-	return *result, nil
-}
-
-func (m *SharedMem) AsyncWriteEntityToSharedMem(data domain.Entity) error {
-	m.sendStreamEntity <- data
-	return nil
-}
-
 func (m *SharedMem) receiveFromChannelAndWriteSharedMem() error {
 	for {
 		select {
@@ -69,6 +54,21 @@ func (m *SharedMem) receiveFromChannelAndWriteSharedMem() error {
 		}
 	}
 	// return nil
+}
+
+func (m *SharedMem) SyncReadEntity() (domain.Entity, error) {
+	mu.Lock()
+	result := m.sharedMemoryEntity
+	mu.Unlock()
+	if result == nil {
+		return domain.Entity{}, fmt.Errorf("no such data")
+	}
+	return *result, nil
+}
+
+func (m *SharedMem) AsyncWriteEntity(data domain.Entity) error {
+	m.sendStreamEntity <- data
+	return nil
 }
 
 func (m *SharedMem) AsyncPublishMessage(data domain.Message) error {
