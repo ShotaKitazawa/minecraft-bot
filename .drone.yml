@@ -63,7 +63,7 @@ steps:
   - cd /root/manifests
   - sed -i -e 's|\(deployDate:\).*$|\1 "'$(date +%Y-%m-%d)'"|g' /root/manifests/$MANIFEST_PATH
   - sed -i -e 's|\(commitHash:\).*$|\1 "'$COMMIT_HASH'"|g' /root/manifests/$MANIFEST_PATH
-  - sed -i -e 's|\(image:.*:\).*$|\1'$COMMIT_HASH'|g' /root/manifests/$MANIFEST_PATH
+  - sed -i -e 's|\(image: kanatakita/minecraft-bot:\).*$|\1'$COMMIT_HASH'|g' /root/manifests/$MANIFEST_PATH
   - git add .
   - git config user.name DroneCI
   - git config user.email dummy@example.com
