@@ -19,15 +19,22 @@ const (
 type PluginConfig struct {
 	MinecraftHostname string
 	SharedMem         sharedmem.SharedMem
+	Subscriber        sharedmem.Subscriber
 	Rcon              rcon.RconClient
 	Logger            *logrus.Logger
 	Plugins           []PluginInterface
+	Sender            botplug.BotSender
 }
 
-func New(minecraftHostname string, m sharedmem.SharedMem, rcon *rcon.Client, logger *logrus.Logger) *PluginConfig {
-	return &PluginConfig{
+func New(minecraftHostname string, m sharedmem.SharedMem, rcon *rcon.Client, logger *logrus.Logger) (*PluginConfig, error) {
+	subscriber, err := m.NewSubscriber()
+	if err != nil {
+		return nil, err
+	}
+	pc := &PluginConfig{
 		MinecraftHostname: minecraftHostname,
 		SharedMem:         m,
+		Subscriber:        subscriber,
 		Rcon:              rcon,
 		Logger:            logger,
 		Plugins: []PluginInterface{
@@ -52,6 +59,7 @@ func New(minecraftHostname string, m sharedmem.SharedMem, rcon *rcon.Client, log
 			},
 		},
 	}
+	return pc, nil
 }
 
 func (pc *PluginConfig) ReceiveMessageEntry(input *botplug.MessageInput) *botplug.MessageOutput {
@@ -82,5 +90,24 @@ func (pc *PluginConfig) ReceiveMessageEntry(input *botplug.MessageInput) *botplu
 func (pc *PluginConfig) ReceiveMemberJoinEntry(input *botplug.MessageInput) *botplug.MessageOutput {
 	var queue []interface{}
 	queue = append(queue, i18n.T.Sprintf(i18n.MessageMemberJoined, pc.MinecraftHostname))
+	return &botplug.MessageOutput{Queue: queue}
+}
+
+func (pc *PluginConfig) PushMessageEntry() *botplug.MessageOutput {
+	message, err := pc.Subscriber.SyncSubscribeMessage() // wait until get data
+	if err != nil {
+		pc.Logger.Error(err)
+	}
+	queue := pc.pushToChat(message.Msg)
+	if err != nil {
+		pc.Logger.Error(err)
+	}
+	return queue
+}
+
+func (pc *PluginConfig) pushToChat(msg string) *botplug.MessageOutput {
+	var queue []interface{}
+
+	queue = append(queue, msg)
 	return &botplug.MessageOutput{Queue: queue}
 }

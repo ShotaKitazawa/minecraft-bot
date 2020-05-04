@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/ShotaKitazawa/minecraft-bot/pkg/domain"
+	"github.com/ShotaKitazawa/minecraft-bot/pkg/sharedmem"
 	"github.com/sirupsen/logrus"
 )
 
@@ -13,26 +14,52 @@ var (
 )
 
 type SharedMem struct {
-	logger        *logrus.Logger
-	sendStream    chan<- domain.Entity
-	receiveStream <-chan domain.Entity
-	sharedMemory  *domain.Entity
+	logger               *logrus.Logger
+	sendStreamEntity     chan<- domain.Entity
+	receiveStreamEntity  <-chan domain.Entity
+	sendStreamMessage    chan<- domain.Message
+	receiveStreamMessage <-chan domain.Message
+	publishMessage       chan<- domain.Message
+	subscribeMessage     <-chan domain.Message
+	sharedMemoryEntity   *domain.Entity
 }
 
 func New(logger *logrus.Logger) (*SharedMem, error) {
-	stream := make(chan domain.Entity)
+	streamEntity := make(chan domain.Entity)
+	streamQueue := make(chan domain.Message)
+	streamPubSubMsg := make(chan domain.Message)
 	m := &SharedMem{
-		logger:        logger,
-		sendStream:    stream,
-		receiveStream: stream,
+		logger:               logger,
+		sendStreamEntity:     streamEntity,
+		receiveStreamEntity:  streamEntity,
+		sendStreamMessage:    streamQueue,
+		receiveStreamMessage: streamQueue,
+		publishMessage:       streamPubSubMsg,
+		subscribeMessage:     streamPubSubMsg,
 	}
 	go m.receiveFromChannelAndWriteSharedMem()
 	return m, nil
 }
 
-func (m *SharedMem) SyncReadEntityFromSharedMem() (domain.Entity, error) {
+func (m *SharedMem) receiveFromChannelAndWriteSharedMem() error {
+	for {
+		select {
+		case d := <-m.receiveStreamEntity:
+			mu.Lock()
+			m.sharedMemoryEntity = &d
+			mu.Unlock()
+		case d := <-m.receiveStreamMessage:
+			go func() {
+				m.sendStreamMessage <- d
+			}()
+		}
+	}
+	// return nil
+}
+
+func (m *SharedMem) SyncReadEntity() (domain.Entity, error) {
 	mu.Lock()
-	result := m.sharedMemory
+	result := m.sharedMemoryEntity
 	mu.Unlock()
 	if result == nil {
 		return domain.Entity{}, fmt.Errorf("no such data")
@@ -40,19 +67,31 @@ func (m *SharedMem) SyncReadEntityFromSharedMem() (domain.Entity, error) {
 	return *result, nil
 }
 
-func (m *SharedMem) AsyncWriteEntityToSharedMem(data domain.Entity) error {
-	m.sendStream <- data
+func (m *SharedMem) AsyncWriteEntity(data domain.Entity) error {
+	m.sendStreamEntity <- data
 	return nil
 }
 
-func (m *SharedMem) receiveFromChannelAndWriteSharedMem() error {
-	for {
-		select {
-		case d := <-m.receiveStream:
-			mu.Lock()
-			m.sharedMemory = &d
-			mu.Unlock()
-		}
-	}
-	// return nil
+func (m *SharedMem) AsyncPublishMessage(data domain.Message) error {
+	m.sendStreamMessage <- data
+	return nil
+}
+
+// subscriber instance
+
+type Subscriber struct {
+	logger               *logrus.Logger
+	receiveStreamMessage <-chan domain.Message
+}
+
+func (m *SharedMem) NewSubscriber() (sharedmem.Subscriber, error) {
+	return &Subscriber{
+		logger:               m.logger,
+		receiveStreamMessage: m.receiveStreamMessage,
+	}, nil
+}
+
+func (sub *Subscriber) SyncSubscribeMessage() (domain.Message, error) {
+	result := <-sub.receiveStreamMessage
+	return result, nil
 }

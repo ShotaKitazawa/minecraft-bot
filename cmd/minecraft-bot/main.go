@@ -53,7 +53,6 @@ func main() {
 
 	// parse arguments
 	conf, err := flag.ArgParse(Version, Revision)
-	// error check of "parse arguments"
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -62,7 +61,14 @@ func main() {
 	logger = newLogger(conf.LogLevel)
 
 	// set LINE config
-	botReceiver, botSender, err := line.New(logger, conf.Bot.LINEConfig.ChannelSecret, conf.Bot.LINEConfig.ChannelToken, conf.Bot.LINEConfig.GroupIDs)
+	var lineBots []*line.BotAdaptor
+	for _, lineConfig := range conf.Bot.LINEConfigs {
+		bot, err := line.New(logger, lineConfig.Endpoint, lineConfig.ChannelSecret, lineConfig.ChannelToken, lineConfig.GroupIDs)
+		if err != nil {
+			logger.Fatal(err)
+		}
+		lineBots = append(lineBots, bot)
+	}
 
 	// run sharedMem & get sharedMem instance
 	m := func(sharedmemMode string) sharedmem.SharedMem {
@@ -91,7 +97,7 @@ func main() {
 	}
 
 	// run eventer
-	eventer, err := eventer.New(conf.MinecraftHostname, botSender, m, rcon, logger)
+	eventer, err := eventer.New(conf.MinecraftHostname, m, rcon, logger)
 	if err != nil {
 		logger.Fatal(err)
 	}
@@ -106,12 +112,17 @@ func main() {
 	http.Handle("/metrics", promhttp.Handler())
 
 	// run bot
-	handler, err := botReceiver.WithPlugin(
-		bot.New(conf.MinecraftHostname, m, rcon, logger),
-	).NewHandler()
-	if err != nil {
-		logger.Fatal(err)
+	for _, lineBotInstance := range lineBots {
+		bot, err := bot.New(conf.MinecraftHostname, m, rcon, logger)
+		if err != nil {
+			logger.Fatal(err)
+		}
+		handler, err := lineBotInstance.WithPlugin(bot).NewHandler()
+		if err != nil {
+			logger.Fatal(err)
+		}
+		http.Handle(lineBotInstance.Endpoint, handler)
 	}
-	http.Handle("/linebot", handler)
+
 	logger.Fatal(http.ListenAndServe(":8080", nil))
 }

@@ -46,3 +46,8 @@ type Position struct {
 	Y float32
 	Z float32
 }
+
+type Message struct {
+	UserID string
+	Msg    string
+}

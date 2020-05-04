@@ -6,7 +6,6 @@ import (
 	mapset "github.com/deckarep/golang-set"
 	"github.com/sirupsen/logrus"
 
-	"github.com/ShotaKitazawa/minecraft-bot/pkg/botplug"
 	"github.com/ShotaKitazawa/minecraft-bot/pkg/domain"
 	"github.com/ShotaKitazawa/minecraft-bot/pkg/domain/i18n"
 	"github.com/ShotaKitazawa/minecraft-bot/pkg/rcon"
@@ -18,17 +17,14 @@ const (
 )
 
 type Eventer struct {
-	botplug.BotSender
-
 	MinecraftHostname string
 	sharedMem         sharedmem.SharedMem
 	rcon              rcon.RconClient
 	Logger            *logrus.Logger
 }
 
-func New(minecraftHostname string, sender botplug.BotSender, m sharedmem.SharedMem, rcon rcon.RconClient, logger *logrus.Logger) (*Eventer, error) {
+func New(minecraftHostname string, m sharedmem.SharedMem, rcon rcon.RconClient, logger *logrus.Logger) (*Eventer, error) {
 	return &Eventer{
-		BotSender:         sender,
 		MinecraftHostname: minecraftHostname,
 		sharedMem:         m,
 		rcon:              rcon,
@@ -73,10 +69,10 @@ func (e *Eventer) job() error {
 	}
 
 	// get logged in users from SharedMem
-	previousData, err := e.sharedMem.SyncReadEntityFromSharedMem()
+	previousData, err := e.sharedMem.SyncReadEntity()
 	if err != nil {
 		// write to sharedMem & return
-		return e.sharedMem.AsyncWriteEntityToSharedMem(currentData)
+		return e.sharedMem.AsyncWriteEntity(currentData)
 	}
 
 	// create previousLoginUsernameSet
@@ -101,22 +97,30 @@ func (e *Eventer) job() error {
 		}
 	}
 
-	// send to LINE (PUSH notification) if d.LoginUsers != sharedmem.Domain.LoginUsers
+	// publish Minecraft Message to sharedmem-queue
 	loggingInUsernameSet := currentLoginUsernameSet.Difference(previousLoginUsernameSet)
-	if loggingInUsernameSet.Cardinality() != 0 {
-		if err := e.BotSender.SendTextMessage(i18n.T.Sprintf(i18n.MessageUsersLogin, loggingInUsernameSet.ToSlice())); err != nil {
+	for _, loggingInusername := range loggingInUsernameSet.ToSlice() {
+		usernameStr := loggingInusername.(string)
+		if err := e.sharedMem.AsyncPublishMessage(domain.Message{
+			UserID: usernameStr,
+			Msg:    i18n.T.Sprintf(i18n.MessageUsersLogin, usernameStr),
+		}); err != nil {
 			return err
 		}
 	}
 	loggingOutUsernameSet := previousLoginUsernameSet.Difference(currentLoginUsernameSet)
-	if loggingOutUsernameSet.Cardinality() != 0 {
-		if err := e.BotSender.SendTextMessage(i18n.T.Sprintf(i18n.MessageUsersLogout, loggingOutUsernameSet.ToSlice())); err != nil {
+	for _, loggingOutUsername := range loggingOutUsernameSet.ToSlice() {
+		usernameStr := loggingOutUsername.(string)
+		if err := e.sharedMem.AsyncPublishMessage(domain.Message{
+			UserID: usernameStr,
+			Msg:    i18n.T.Sprintf(i18n.MessageUsersLogout, usernameStr),
+		}); err != nil {
 			return err
 		}
 	}
 
 	// write to sharedMem
-	e.sharedMem.AsyncWriteEntityToSharedMem(currentData)
+	e.sharedMem.AsyncWriteEntity(currentData)
 
 	return nil
 }

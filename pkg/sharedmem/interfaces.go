@@ -3,6 +3,12 @@ package sharedmem
 import "github.com/ShotaKitazawa/minecraft-bot/pkg/domain"
 
 type SharedMem interface {
-	SyncReadEntityFromSharedMem() (domain.Entity, error)
-	AsyncWriteEntityToSharedMem(data domain.Entity) error
+	SyncReadEntity() (domain.Entity, error)
+	AsyncWriteEntity(data domain.Entity) error
+	AsyncPublishMessage(data domain.Message) error
+	NewSubscriber() (Subscriber, error)
+}
+
+type Subscriber interface {
+	SyncSubscribeMessage() (domain.Message, error)
 }

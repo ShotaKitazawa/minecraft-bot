@@ -19,7 +19,7 @@ type Config struct {
 }
 
 type BotConfig struct {
-	LINEConfig LINEConfig `toml:"line"`
+	LINEConfigs []LINEConfig `toml:"line"`
 	// TBD
 	//FeatureVirtualWorld bool       `toml:"virtual-world"`
 	//LINEConfigs         []LINEConfig    `toml:"line"`
@@ -94,17 +94,19 @@ func ValidateConfig(config *Config) error {
 		config.LogLevel = "debug"
 		return errors.New(`"log-level" only support "debug", "info", "warn", and "error"`)
 	}
-	if config.Bot.LINEConfig.Endpoint == "" {
-		return errors.New(`"bot.line.endpoint" is requirement field`)
-	}
-	if config.Bot.LINEConfig.ChannelSecret == "" {
-		return errors.New(`"bot.line.channel-secret" is requirement field`)
-	}
-	if config.Bot.LINEConfig.ChannelToken == "" {
-		return errors.New(`"bot.line.channel-token" is requirement field`)
-	}
-	if config.Bot.LINEConfig.GroupIDs == "" {
-		logger.Warnf(`"bot.line.group-id" is empty, push notification is disabled.`)
+	for _, LINEConfig := range config.Bot.LINEConfigs {
+		if LINEConfig.Endpoint == "" {
+			return errors.New(`"bot.line.endpoint" is requirement field`)
+		}
+		if LINEConfig.ChannelSecret == "" {
+			return errors.New(`"bot.line.channel-secret" is requirement field`)
+		}
+		if LINEConfig.ChannelToken == "" {
+			return errors.New(`"bot.line.channel-token" is requirement field`)
+		}
+		if LINEConfig.GroupIDs == "" {
+			logger.Warnf(`"bot.line.group-id" is empty, push notification is disabled.`)
+		}
 	}
 	if config.Rcon.Host == "" {
 		config.Rcon.Host = "127.0.0.1"

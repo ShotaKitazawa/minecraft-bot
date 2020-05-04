@@ -67,7 +67,7 @@ func (c Collector) Collect(ch chan<- prometheus.Metric) {
 	describePosZGauge := c.descriptors[4]
 	describeXpLevelGauge := c.descriptors[5]
 
-	data, err := c.sharedmem.SyncReadEntityFromSharedMem()
+	data, err := c.sharedmem.SyncReadEntity()
 	if err != nil {
 		c.Logger.Warn(err)
 		return

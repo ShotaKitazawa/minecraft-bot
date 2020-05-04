@@ -2,16 +2,16 @@ package botplug
 
 import "github.com/sirupsen/logrus"
 
-type Config struct {
+type BaseConfig struct {
 	ID     uint
 	Logger *logrus.Logger
 }
 
 var id = 0
 
-func New(logger *logrus.Logger) Config {
+func New(logger *logrus.Logger) BaseConfig {
 	id++
-	return Config{
+	return BaseConfig{
 		ID:     uint(id),
 		Logger: logger,
 	}

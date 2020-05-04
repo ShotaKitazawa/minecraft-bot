@@ -6,7 +6,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/ShotaKitazawa/minecraft-bot/pkg/botplug"
 	"github.com/ShotaKitazawa/minecraft-bot/pkg/domain"
 	"github.com/ShotaKitazawa/minecraft-bot/pkg/mock"
 	"github.com/ShotaKitazawa/minecraft-bot/pkg/rcon"
@@ -18,9 +17,8 @@ var (
 	minecraftHostnameForTest = `test`
 )
 
-func newForTest(sender botplug.BotSender, m sharedmem.SharedMem, rcon rcon.RconClient) *Eventer {
+func newForTest(m sharedmem.SharedMem, rcon rcon.RconClient) *Eventer {
 	return &Eventer{
-		BotSender:         sender,
 		MinecraftHostname: minecraftHostnameForTest,
 		sharedMem:         m,
 		rcon:              rcon,
@@ -31,13 +29,11 @@ func newForTest(sender botplug.BotSender, m sharedmem.SharedMem, rcon rcon.RconC
 func TestEventer(t *testing.T) {
 
 	t.Run(`New()`, func(t *testing.T) {
-		botSenderValid := &mock.BotSenderMockValid{}
 		sharedMemValid := &mock.SharedmemMockValid{}
 		rconValid := &mock.RconClientMockValid{}
-		e, err := New(minecraftHostnameForTest, botSenderValid, sharedMemValid, rconValid, loggerForTest)
+		e, err := New(minecraftHostnameForTest, sharedMemValid, rconValid, loggerForTest)
 		assert.Nil(t, err)
 		assert.Equal(t, e, &Eventer{
-			BotSender:         botSenderValid,
 			MinecraftHostname: minecraftHostnameForTest,
 			sharedMem:         sharedMemValid,
 			rcon:              rconValid,
@@ -48,7 +44,6 @@ func TestEventer(t *testing.T) {
 		t.Run(`normal`, func(t *testing.T) {
 			t.Run(`numOfAllLoginUser:0,numOfCurrentLoginUser:0,numOfPreviousLoginUser:0`, func(t *testing.T) {
 				e := newForTest(
-					&mock.BotSenderMockValid{},
 					&mock.SharedmemMockValid{},
 					&mock.RconClientMockValid{},
 				)
@@ -56,7 +51,6 @@ func TestEventer(t *testing.T) {
 			})
 			t.Run(`numOfAllLoginUser:1,numOfCurrentLoginUser:0,numOfPreviousLoginUser:0`, func(t *testing.T) {
 				e := newForTest(
-					&mock.BotSenderMockValid{},
 					&mock.SharedmemMockValid{Data: &domain.Entity{
 						AllUsers: []domain.User{{Name: `test`}},
 					}},
@@ -66,7 +60,6 @@ func TestEventer(t *testing.T) {
 			})
 			t.Run(`numOfAllLoginUser:1,numOfCurrentLoginUser:1,numOfPreviousLoginUser:0`, func(t *testing.T) {
 				e := newForTest(
-					&mock.BotSenderMockValid{},
 					&mock.SharedmemMockValid{Data: &domain.Entity{
 						AllUsers: []domain.User{{Name: `test`}},
 					}},
@@ -76,7 +69,6 @@ func TestEventer(t *testing.T) {
 			})
 			t.Run(`numOfAllLoginUser:1,numOfCurrentLoginUser:0,numOfPreviousLoginUser:1`, func(t *testing.T) {
 				e := newForTest(
-					&mock.BotSenderMockValid{},
 					&mock.SharedmemMockValid{Data: &domain.Entity{
 						AllUsers:   []domain.User{{Name: `test`}},
 						LoginUsers: []domain.User{{Name: `test`}},
@@ -87,7 +79,6 @@ func TestEventer(t *testing.T) {
 			})
 			t.Run(`numOfAllLoginUser:1,numOfCurrentLoginUser:1,numOfPreviousLoginUser:1`, func(t *testing.T) {
 				e := newForTest(
-					&mock.BotSenderMockValid{},
 					&mock.SharedmemMockValid{Data: &domain.Entity{
 						AllUsers:   []domain.User{{Name: `test`}},
 						LoginUsers: []domain.User{{Name: `test`}},
@@ -97,22 +88,8 @@ func TestEventer(t *testing.T) {
 				assert.Nil(t, e.job())
 			})
 		})
-		t.Run(`abnormal(BotSender)`, func(t *testing.T) {
-			t.Run(`numOfAllLoginUser:1,numOfCurrentLoginUser:0,numOfPreviousLoginUser:1`, func(t *testing.T) {
-				e := newForTest(
-					&mock.BotSenderMockInvalid{},
-					&mock.SharedmemMockValid{Data: &domain.Entity{
-						AllUsers:   []domain.User{{Name: `test`}},
-						LoginUsers: []domain.User{{Name: `test`}},
-					}},
-					&mock.RconClientMockValid{},
-				)
-				assert.NotNil(t, e.job())
-			})
-		})
 		t.Run(`abnormal(SharedMem)`, func(t *testing.T) {
 			e := newForTest(
-				&mock.BotSenderMockValid{},
 				&mock.SharedmemMockInvalid{},
 				&mock.RconClientMockValid{},
 			)
@@ -120,7 +97,6 @@ func TestEventer(t *testing.T) {
 		})
 		t.Run(`abnormal(RconClient)`, func(t *testing.T) {
 			e := newForTest(
-				&mock.BotSenderMockValid{},
 				&mock.SharedmemMockValid{},
 				&mock.RconClientMockInvalid{},
 			)

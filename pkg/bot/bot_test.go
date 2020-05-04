@@ -74,8 +74,18 @@ func TestBot(t *testing.T) {
 		result, ok := output.Queue[0].(string)
 		assert.True(t, ok)
 		assert.Equal(t, i18n.T.Sprintf(i18n.MessageMemberJoined, pc.MinecraftHostname), result)
-
 	})
+
+	t.Run(`pushToChat()`, func(t *testing.T) {
+		pc := PluginConfig{
+			MinecraftHostname: MinecraftHostnameForTest,
+			Logger:            loggerForTest,
+			Sender:            &mock.BotSenderMockValid{},
+		}
+		queue := pc.pushToChat(`hoge`)
+		assert.Equal(t, &botplug.MessageOutput{Queue: []interface{}{"hoge"}}, queue)
+	})
+
 }
 
 type PluginMock struct{}
