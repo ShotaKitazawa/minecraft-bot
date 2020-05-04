@@ -48,7 +48,7 @@ Usage of minecraft-bot:
 
 ```
 # Minecraft Server Hostname (requirement)
-minecraft-hostname = "minecraft.kanatakita.com"
+minecraft-hostname = "your_domain"
 
 # basic setting (option)
 bind-addr = "0.0.0.0"  # default: "0.0.0.0"
