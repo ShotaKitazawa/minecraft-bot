@@ -26,15 +26,10 @@ type PluginConfig struct {
 	Sender            botplug.BotSender
 }
 
-func New(minecraftHostname string, m sharedmem.SharedMem, rcon *rcon.Client, logger *logrus.Logger) (*PluginConfig, error) {
-	subscriber, err := m.NewSubscriber()
-	if err != nil {
-		return nil, err
-	}
+func New(logger *logrus.Logger, m sharedmem.SharedMem, rcon *rcon.Client, minecraftHostname, notificationMode string) (*PluginConfig, error) {
 	pc := &PluginConfig{
 		MinecraftHostname: minecraftHostname,
 		SharedMem:         m,
-		Subscriber:        subscriber,
 		Rcon:              rcon,
 		Logger:            logger,
 		Plugins: []PluginInterface{
@@ -59,6 +54,15 @@ func New(minecraftHostname string, m sharedmem.SharedMem, rcon *rcon.Client, log
 			},
 		},
 	}
+
+	if notificationMode != "none" {
+		subscriber, err := m.NewSubscriber()
+		if err != nil {
+			return nil, err
+		}
+		pc.Subscriber = subscriber
+	}
+
 	return pc, nil
 }
 
@@ -94,6 +98,9 @@ func (pc *PluginConfig) ReceiveMemberJoinEntry(input *botplug.MessageInput) *bot
 }
 
 func (pc *PluginConfig) PushMessageEntry() *botplug.MessageOutput {
+	if pc.Subscriber == nil {
+		return &botplug.MessageOutput{}
+	}
 	message, err := pc.Subscriber.SyncSubscribeMessage() // wait until get data
 	if err != nil {
 		pc.Logger.Error(err)

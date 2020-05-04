@@ -21,17 +21,16 @@ type Config struct {
 type BotConfig struct {
 	LINEConfigs []LINEConfig `toml:"line"`
 	// TBD
-	//FeatureVirtualWorld bool       `toml:"virtual-world"`
-	//LINEConfigs         []LINEConfig    `toml:"line"`
 	//SlackConfigs        []SlackConfig   `toml:"slack"`
 	//DiscordConfigs      []DiscordConfig `toml:"discord"`
 }
 
 type LINEConfig struct {
-	Endpoint      string `toml:"endpoint"`
-	ChannelSecret string `toml:"channel-secret"`
-	ChannelToken  string `toml:"channel-token"`
-	GroupIDs      string `toml:"group-ids"`
+	Endpoint         string `toml:"endpoint"`
+	ChannelSecret    string `toml:"channel-secret"`
+	ChannelToken     string `toml:"channel-token"`
+	GroupIDs         string `toml:"group-ids"`
+	NotificationMode string `toml:"notification-mode"`
 }
 
 // TBD
@@ -94,6 +93,7 @@ func ValidateConfig(config *Config) error {
 		config.LogLevel = "debug"
 		return errors.New(`"log-level" only support "debug", "info", "warn", and "error"`)
 	}
+
 	for _, LINEConfig := range config.Bot.LINEConfigs {
 		if LINEConfig.Endpoint == "" {
 			return errors.New(`"bot.line.endpoint" is requirement field`)
@@ -106,6 +106,12 @@ func ValidateConfig(config *Config) error {
 		}
 		if LINEConfig.GroupIDs == "" {
 			logger.Warnf(`"bot.line.group-id" is empty, push notification is disabled.`)
+		}
+		if LINEConfig.NotificationMode == "" {
+			LINEConfig.NotificationMode = "all"
+		} else if !(LINEConfig.NotificationMode == "all" ||
+			LINEConfig.NotificationMode == "none") {
+			return errors.New(`"notification-mode" only support "all", and "none"`)
 		}
 	}
 	if config.Rcon.Host == "" {
