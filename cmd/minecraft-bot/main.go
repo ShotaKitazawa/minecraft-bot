@@ -61,13 +61,13 @@ func main() {
 	logger = newLogger(conf.LogLevel)
 
 	// set LINE config
-	var bots []*line.BotAdaptor
+	var lineBots []*line.BotAdaptor
 	for _, lineConfig := range conf.Bot.LINEConfigs {
 		bot, err := line.New(logger, lineConfig.Endpoint, lineConfig.ChannelSecret, lineConfig.ChannelToken, lineConfig.GroupIDs)
 		if err != nil {
 			logger.Fatal(err)
 		}
-		bots = append(bots, bot)
+		lineBots = append(lineBots, bot)
 	}
 
 	// run sharedMem & get sharedMem instance
@@ -112,14 +112,16 @@ func main() {
 	http.Handle("/metrics", promhttp.Handler())
 
 	// run bot
-	for _, botInstance := range bots {
-		handler, err := botInstance.WithPlugin(
-			bot.New(conf.MinecraftHostname, m, rcon, logger),
-		).NewHandler()
+	for _, lineBotInstance := range lineBots {
+		bot, err := bot.New(conf.MinecraftHostname, m, rcon, logger)
 		if err != nil {
 			logger.Fatal(err)
 		}
-		http.Handle(botInstance.Endpoint, handler)
+		handler, err := lineBotInstance.WithPlugin(bot).NewHandler()
+		if err != nil {
+			logger.Fatal(err)
+		}
+		http.Handle(lineBotInstance.Endpoint, handler)
 	}
 
 	logger.Fatal(http.ListenAndServe(":8080", nil))

@@ -82,8 +82,8 @@ func TestBot(t *testing.T) {
 			Logger:            loggerForTest,
 			Sender:            &mock.BotSenderMockValid{},
 		}
-		err := pc.pushToChat(`hoge`)
-		assert.Nil(t, err)
+		queue := pc.pushToChat(`hoge`)
+		assert.Equal(t, &botplug.MessageOutput{Queue: []interface{}{"hoge"}}, queue)
 	})
 
 }

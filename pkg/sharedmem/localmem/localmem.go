@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/ShotaKitazawa/minecraft-bot/pkg/domain"
+	"github.com/ShotaKitazawa/minecraft-bot/pkg/sharedmem"
 	"github.com/sirupsen/logrus"
 )
 
@@ -75,7 +76,22 @@ func (m *SharedMem) AsyncPublishMessage(data domain.Message) error {
 	m.sendStreamMessage <- data
 	return nil
 }
-func (m *SharedMem) SyncSubscribeMessage() (domain.Message, error) {
-	result := <-m.receiveStreamMessage
+
+// subscriber instance
+
+type Subscriber struct {
+	logger               *logrus.Logger
+	receiveStreamMessage <-chan domain.Message
+}
+
+func (m *SharedMem) NewSubscriber() (sharedmem.Subscriber, error) {
+	return &Subscriber{
+		logger:               m.logger,
+		receiveStreamMessage: m.receiveStreamMessage,
+	}, nil
+}
+
+func (sub *Subscriber) SyncSubscribeMessage() (domain.Message, error) {
+	result := <-sub.receiveStreamMessage
 	return result, nil
 }

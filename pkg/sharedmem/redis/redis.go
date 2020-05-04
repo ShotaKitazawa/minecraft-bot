@@ -8,6 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/ShotaKitazawa/minecraft-bot/pkg/domain"
+	"github.com/ShotaKitazawa/minecraft-bot/pkg/sharedmem"
 )
 
 var (
@@ -21,8 +22,6 @@ type SharedMem struct {
 	sendStreamMessage    chan<- domain.Message
 	receiveStreamMessage <-chan domain.Message
 	Conn                 redis.Conn
-	PubMsgConn           redis.PubSubConn
-	SubMsgConn           redis.PubSubConn
 	redisHostname        string
 }
 
@@ -34,13 +33,6 @@ func New(logger *logrus.Logger, addr string, port int) (*SharedMem, error) {
 	if err != nil {
 		return nil, err
 	}
-	pubconn := redis.PubSubConn{Conn: c}
-	clientForSubscribe, err := redis.Dial("tcp", redisHostname)
-	if err != nil {
-		return nil, err
-	}
-	subconn := redis.PubSubConn{Conn: clientForSubscribe}
-	subconn.Subscribe(pubsubMsgChannelName)
 	m := &SharedMem{
 		logger:               logger,
 		sendStreamEntity:     streamEntity,
@@ -48,8 +40,6 @@ func New(logger *logrus.Logger, addr string, port int) (*SharedMem, error) {
 		sendStreamMessage:    streamQueue,
 		receiveStreamMessage: streamQueue,
 		Conn:                 c,
-		PubMsgConn:           pubconn,
-		SubMsgConn:           subconn,
 		redisHostname:        redisHostname,
 	}
 	go m.receiveFromChannelAndWriteSharedMem()
@@ -119,12 +109,32 @@ func (m *SharedMem) AsyncPublishMessage(data domain.Message) error {
 	return nil
 }
 
-func (m *SharedMem) SyncSubscribeMessage() (domain.Message, error) {
+// subscriber instance
+
+type Subscriber struct {
+	redis.PubSubConn
+	logger *logrus.Logger
+}
+
+func (m *SharedMem) NewSubscriber() (sharedmem.Subscriber, error) {
+	clientForSubscribe, err := redis.Dial("tcp", m.redisHostname)
+	if err != nil {
+		return nil, err
+	}
+	subconn := redis.PubSubConn{Conn: clientForSubscribe}
+	subconn.Subscribe(pubsubMsgChannelName)
+	return &Subscriber{
+		PubSubConn: subconn,
+		logger:     m.logger,
+	}, nil
+}
+
+func (sub *Subscriber) SyncSubscribeMessage() (domain.Message, error) {
 	message := domain.Message{}
-	switch v := m.SubMsgConn.Receive().(type) {
+	switch v := sub.Receive().(type) {
 	case redis.Message:
 		if err := json.Unmarshal(v.Data, &message); err != nil {
-			m.logger.Error(err)
+			sub.logger.Error(err)
 			return domain.Message{}, err
 		}
 		// case redis.Subscription:
