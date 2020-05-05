@@ -28,7 +28,7 @@ func (m *SharedmemMockValid) AsyncPublishMessage(data domain.Message) error {
 }
 
 func (m *SharedmemMockValid) NewSubscriber() (sharedmem.Subscriber, error) {
-	return nil, errors.New(``)
+	return &SubscriberMockValid{}, nil
 }
 
 type SubscriberMockValid struct{}
@@ -36,7 +36,7 @@ type SubscriberMockValid struct{}
 func (sub *SubscriberMockValid) SyncSubscribeMessage() (domain.Message, error) {
 	return domain.Message{
 		UserID: MockUserNameValue,
-		Msg:    `test`,
+		Msg:    MockMessageValue,
 	}, nil
 }
 

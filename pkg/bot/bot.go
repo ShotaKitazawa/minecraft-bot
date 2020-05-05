@@ -18,6 +18,7 @@ const (
 
 type PluginConfig struct {
 	MinecraftHostname string
+	NotificationMode  string
 	SharedMem         sharedmem.SharedMem
 	Subscriber        sharedmem.Subscriber
 	Rcon              rcon.RconClient
@@ -26,9 +27,10 @@ type PluginConfig struct {
 	Sender            botplug.BotSender
 }
 
-func New(logger *logrus.Logger, m sharedmem.SharedMem, rcon *rcon.Client, minecraftHostname, notificationMode string) (*PluginConfig, error) {
+func New(logger *logrus.Logger, m sharedmem.SharedMem, rcon rcon.RconClient, minecraftHostname, notificationMode string) (*PluginConfig, error) {
 	pc := &PluginConfig{
 		MinecraftHostname: minecraftHostname,
+		NotificationMode:  notificationMode,
 		SharedMem:         m,
 		Rcon:              rcon,
 		Logger:            logger,
@@ -104,6 +106,7 @@ func (pc *PluginConfig) PushMessageEntry() *botplug.MessageOutput {
 	message, err := pc.Subscriber.SyncSubscribeMessage() // wait until get data
 	if err != nil {
 		pc.Logger.Error(err)
+		return &botplug.MessageOutput{}
 	}
 	queue := pc.pushToChat(message.Msg)
 	if err != nil {
