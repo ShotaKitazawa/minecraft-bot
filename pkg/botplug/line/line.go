@@ -20,7 +20,6 @@ type BotAdaptor struct {
 	Endpoint         string
 	GroupIDs         []string
 	bot              *linebot.Client
-	Plugins          []botplug.BotPlugin
 }
 
 func New(logger *logrus.Logger, endpoint, channelSecret, channelToken, groupIDsStr, notificationMode string) (*BotAdaptor, error) {
@@ -84,6 +83,38 @@ func (ba *BotAdaptor) pushMessageLoop() (err error) {
 		}
 		time.Sleep(time.Second)
 	}
+}
+
+func (ba *BotAdaptor) pushFromQueue(output *botplug.MessageOutput) (err error) {
+	// proceed contents in queue
+	for _, element := range output.Queue {
+		switch typedElement := element.(type) {
+		case string:
+			if typedElement == "" {
+				return
+			}
+			if err = ba.SendTextMessage(typedElement); err != nil {
+				return
+			}
+		case []string:
+			if len(typedElement) == 0 {
+				return
+			}
+			if err = ba.SendTextMessage(strings.Join(typedElement, ",")); err != nil {
+				return
+			}
+		case error:
+			if typedElement.Error() == "" {
+				return
+			}
+			if err = ba.SendTextMessage(typedElement.Error()); err != nil {
+				return
+			}
+		case []linebot.SendingMessage:
+			// TODO: implement
+		}
+	}
+	return nil
 }
 
 // call Bot Plugin interface
@@ -193,38 +224,6 @@ func (receiver *BotAdaptor) replyFromQueue(event *linebot.Event, output *botplug
 			if _, err = receiver.bot.ReplyMessage(event.ReplyToken, typedElement...).Do(); err != nil {
 				return
 			}
-		}
-	}
-	return nil
-}
-
-func (ba *BotAdaptor) pushFromQueue(output *botplug.MessageOutput) (err error) {
-	// proceed contents in queue
-	for _, element := range output.Queue {
-		switch typedElement := element.(type) {
-		case string:
-			if typedElement == "" {
-				return
-			}
-			if err = ba.SendTextMessage(typedElement); err != nil {
-				return
-			}
-		case []string:
-			if len(typedElement) == 0 {
-				return
-			}
-			if err = ba.SendTextMessage(strings.Join(typedElement, ",")); err != nil {
-				return
-			}
-		case error:
-			if typedElement.Error() == "" {
-				return
-			}
-			if err = ba.SendTextMessage(typedElement.Error()); err != nil {
-				return
-			}
-		case []linebot.SendingMessage:
-			// TODO: implement
 		}
 	}
 	return nil
