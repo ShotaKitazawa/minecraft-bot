@@ -19,11 +19,10 @@ type Config struct {
 }
 
 type BotConfig struct {
-	NotificationMode string        `toml:"notification-mode"`
-	LINEConfigs      []LINEConfig  `toml:"line"`
-	SlackConfigs     []SlackConfig `toml:"slack"`
-	// TBD
-	//DiscordConfigs      []DiscordConfig `toml:"discord"`
+	NotificationMode string          `toml:"notification-mode"`
+	LINEConfigs      []LINEConfig    `toml:"line"`
+	SlackConfigs     []SlackConfig   `toml:"slack"`
+	DiscordConfigs   []DiscordConfig `toml:"discord"`
 }
 
 type LINEConfig struct {
@@ -38,8 +37,10 @@ type SlackConfig struct {
 	ChannelIDs string `toml:"channel-ids"`
 }
 
-// TBD
-// type DiscordConfig struct{}
+type DiscordConfig struct {
+	Token      string `toml:"token"`
+	ChannelIDs string `toml:"channel-ids"`
+}
 
 type RconConfig struct {
 	Host     string `toml:"host"`
@@ -125,6 +126,15 @@ func ValidateConfig(config *Config) error {
 			logger.Warnf(`"bot.slack[].channel-ids" is empty, push notification is disabled.`)
 		}
 	}
+	for _, discordConfig := range config.Bot.DiscordConfigs {
+		if discordConfig.Token == "" {
+			return errors.New(`"bot.dircord[].token" is requirement field`)
+		}
+		if discordConfig.ChannelIDs == "" {
+			logger.Warnf(`"bot.discord[].channel-ids" is empty, push notification is disabled.`)
+		}
+	}
+
 	if config.Rcon.Host == "" {
 		config.Rcon.Host = "127.0.0.1"
 	}

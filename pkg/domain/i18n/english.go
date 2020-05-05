@@ -12,22 +12,22 @@ func initEnglish() {
 	message.SetString(language.English, MessageError, `Internal Error`)
 
 	message.SetString(language.English, MessageHelp, `
-/help
+!help
 display help messages
 
-/list
+!list
 display log in users name
 
-/title hoge
+!title hoge
 display "hoge" to Minecraft
 
-/whitelist list
+!whitelist list
 display whitelist
 
-/whitelist add hoge
+!whitelist add hoge
 add user "hoge" to whitelist
 
-/whitelist delete hoge
+!whitelist delete hoge
 delete user "hoge" from whitelist
 `)
 
@@ -35,7 +35,7 @@ delete user "hoge" from whitelist
 
 	message.SetString(language.English, MessageMemberJoined, `
 Welcome! Please set up this process
-1. chat "/whitelist add ${MINECRAFT_ACCOUNT_ID}" in this talk-room
+1. chat "!whitelist add ${MINECRAFT_ACCOUNT_ID}" in this talk-room
 2. launch Minecraft & enter server to "%s"
 `)
 

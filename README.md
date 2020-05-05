@@ -79,6 +79,14 @@ token = "XXX"
 channel-ids = "XXX"  # default: none, cannot push notification without this
 
 
+[[bot.discord]]
+# Discord Bot Configuration (requirement)
+token = "XXX"
+
+# Discord Bot Configuration (option)
+channel-ids = "XXX"  # default: none, cannot push notification without this
+
+
 [rcon]
 # connect in RCON to Minecraft (option)
 host = "127.0.0.1"    # default: "127.0.0.1"
@@ -181,15 +189,20 @@ rcon.port=[minecraftRconPort]
 * Setup Slack Bot & Get `Bot User OAuth Access Token` : https://api.slack.com/apps/
 
 * Look up GroupID
-    1. run bot without `group-ids` of `[[bot.line]]` in config.toml
+    1. run bot without `group-ids` of `[[bot.slack]]` in config.toml
     2. chat `!id` in specified group
     3. check response of `GroupID: XXX`
-    4. postscript `group-ids` of `[[bot.line]]` in config.toml & re-run bot
+    4. postscript `group-ids` of `[[bot.slack]]` in config.toml & re-run bot
 
 ### setup Bot for Discord
 
-TBD
+* Setup Slack Bot & Get Bot `TOKEN` : https://discord.com/developers/applications/
 
+* Look up GroupID
+    1. run bot without `group-ids` of `[[bot.discord]]` in config.toml
+    2. chat `!id` in specified group
+    3. check response of `GroupID: XXX`
+    4. postscript `group-ids` of `[[bot.discord]]` in config.toml & re-run bot
 
 ### Bot needs to support HTTPS separately
 
