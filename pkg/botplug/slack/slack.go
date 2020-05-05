@@ -103,12 +103,8 @@ func (ba *BotAdaptor) Run() error {
 	for msg := range rtm.IncomingEvents {
 		switch ev := msg.Data.(type) {
 		case *slack.MessageEvent:
-			for _, channelName := range ba.ChannelIDs {
-				if ev.Channel == channelName {
-					if err := ba.receiveTextMessage(ev); err != nil {
-						ba.Logger.Error(err)
-					}
-				}
+			if err := ba.receiveTextMessage(ev); err != nil {
+				ba.Logger.Error(err)
 			}
 		}
 	}

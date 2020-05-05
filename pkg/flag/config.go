@@ -19,22 +19,26 @@ type Config struct {
 }
 
 type BotConfig struct {
-	LINEConfigs []LINEConfig `toml:"line"`
+	NotificationMode string        `toml:"notification-mode"`
+	LINEConfigs      []LINEConfig  `toml:"line"`
+	SlackConfigs     []SlackConfig `toml:"slack"`
 	// TBD
-	//SlackConfigs        []SlackConfig   `toml:"slack"`
 	//DiscordConfigs      []DiscordConfig `toml:"discord"`
 }
 
 type LINEConfig struct {
-	Endpoint         string `toml:"endpoint"`
-	ChannelSecret    string `toml:"channel-secret"`
-	ChannelToken     string `toml:"channel-token"`
-	GroupIDs         string `toml:"group-ids"`
-	NotificationMode string `toml:"notification-mode"`
+	Endpoint      string `toml:"endpoint"`
+	ChannelSecret string `toml:"channel-secret"`
+	ChannelToken  string `toml:"channel-token"`
+	GroupIDs      string `toml:"group-ids"`
+}
+
+type SlackConfig struct {
+	Token      string `toml:"token"`
+	ChannelIDs string `toml:"channel-ids"`
 }
 
 // TBD
-// type SlackConfig struct{}
 // type DiscordConfig struct{}
 
 type RconConfig struct {
@@ -93,7 +97,12 @@ func ValidateConfig(config *Config) error {
 		config.LogLevel = "debug"
 		return errors.New(`"log-level" only support "debug", "info", "warn", and "error"`)
 	}
-
+	if config.Bot.NotificationMode == "" {
+		config.Bot.NotificationMode = "all"
+	} else if !(config.Bot.NotificationMode == "all" ||
+		config.Bot.NotificationMode == "none") {
+		return errors.New(`"bot.line[].notification-mode" only support "all", and "none"`)
+	}
 	for _, LINEConfig := range config.Bot.LINEConfigs {
 		if LINEConfig.Endpoint == "" {
 			return errors.New(`"bot.line[].endpoint" is requirement field`)
@@ -105,13 +114,15 @@ func ValidateConfig(config *Config) error {
 			return errors.New(`"bot.line[].channel-token" is requirement field`)
 		}
 		if LINEConfig.GroupIDs == "" {
-			logger.Warnf(`"bot.line[].group-id" is empty, push notification is disabled.`)
+			logger.Warnf(`"bot.line[].group-ids" is empty, push notification is disabled.`)
 		}
-		if LINEConfig.NotificationMode == "" {
-			LINEConfig.NotificationMode = "all"
-		} else if !(LINEConfig.NotificationMode == "all" ||
-			LINEConfig.NotificationMode == "none") {
-			return errors.New(`"bot.line[].notification-mode" only support "all", and "none"`)
+	}
+	for _, SlackConfig := range config.Bot.SlackConfigs {
+		if SlackConfig.Token == "" {
+			return errors.New(`"bot.slack[].token" is requirement field`)
+		}
+		if SlackConfig.ChannelIDs == "" {
+			logger.Warnf(`"bot.slack[].channel-ids" is empty, push notification is disabled.`)
 		}
 	}
 	if config.Rcon.Host == "" {
