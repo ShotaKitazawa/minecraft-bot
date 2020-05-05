@@ -53,21 +53,22 @@ minecraft-hostname = "your_domain"
 # basic setting (option)
 bind-addr = "0.0.0.0"  # default: "0.0.0.0"
 bind-port = 8080       # default: 8080
-log-level = "info"     # default: "info"
+log-level = "info"     # default: "info",  support "debug", "info", "warn", or "error"
 
 
-[bot.line]
+[[bot.line]]
 # LINE Configuration (requirement)
 endpoint = "/linebot"
 channel-secret = "XXX"
 channel-token = "XXX"
 
-# LINE Configuration (option, but cannot push notification without this)
-group-ids = "XXX"
+# LINE Configuration (option, )
+group-ids = "XXX"          # default: none,   cannot push notification without this
+notification-mode = "XXX"  # default: "all",  support "none", or "all"
 
 
 [rcon]
-# connect in RCON to Minecraft (requirement)
+# connect in RCON to Minecraft (option)
 host = "127.0.0.1"    # default: "127.0.0.1"
 port = 25575          # default: 25575
 
@@ -76,7 +77,7 @@ password = "XXX"
 
 
 [sharedmem]
-# place to store state (only "redis" (recommended) or "local")
+# place to store state (support "redis" (recommended), or "local")
 mode = "redis"        # default: "local"
 
 
@@ -88,7 +89,7 @@ port = 6379           # default: 6379
 
 ### Execution example
 
-* enable LINE Bot
+* enable one LINE Bot
 * using Redis in sharedmem
 * minecraft-bot, Minecraft, Redis exist in the same server
 
@@ -96,7 +97,7 @@ port = 6379           # default: 6379
 $ cat config.toml
 minecraft-hostname = "your_domain"
 
-[bot.line]
+[[bot.line]]
 endpoint = "/linebot"
 channel-secret = "XXX"
 channel-token = "XXX"
@@ -106,7 +107,7 @@ group-ids = "XXX"
 password = "XXX"
 
 [sharedmem]
-mode = "redis"        # default: "local"
+mode = "redis"
 ```
 
 * run `minecraft-bot`
