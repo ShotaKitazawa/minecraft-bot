@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	commandPrefix = `/`
+	commandPrefix = `!`
 )
 
 type PluginConfig struct {

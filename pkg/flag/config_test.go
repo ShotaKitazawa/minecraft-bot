@@ -16,6 +16,8 @@ const (
 	botLINEChannelSecretForTest = `channel-secret`
 	botLINEChannelTokenForTest  = `channel-token`
 	botLINEGroupIDForTest       = `group-id`
+	botSlackTokenForTest        = `token`
+	botSlackChannelForTest      = `channel-id`
 	rconHostForTest             = `127.0.0.1`
 	rconPortForTest             = 25575
 	rconPasswordForTest         = `rcon-password`
@@ -53,7 +55,7 @@ func TestConfig(t *testing.T) {
 		})
 	})
 	t.Run(`ValidateConfig()`, func(t *testing.T) {
-		t.Run(`valid`, func(t *testing.T) {
+		t.Run(`valid: 1 LINE config`, func(t *testing.T) {
 			conf := &Config{
 				MinecraftHostname: minecraftHostnameForTest,
 				Bot: BotConfig{
@@ -61,6 +63,25 @@ func TestConfig(t *testing.T) {
 						Endpoint:      botLINEEndpointForTest,
 						ChannelSecret: botLINEChannelSecretForTest,
 						ChannelToken:  botLINEChannelTokenForTest,
+					}},
+				},
+				Rcon: RconConfig{
+					Password: rconPasswordForTest,
+				},
+				SharedMem: SharedMemConfig{
+					Mode: sharedmemModeForTest,
+				},
+			}
+			err := ValidateConfig(conf)
+			assert.Nil(t, err)
+		})
+		t.Run(`valid: 1 Slack config`, func(t *testing.T) {
+			conf := &Config{
+				MinecraftHostname: minecraftHostnameForTest,
+				Bot: BotConfig{
+					SlackConfigs: []SlackConfig{{
+						Token:      botSlackTokenForTest,
+						ChannelIDs: botSlackChannelForTest,
 					}},
 				},
 				Rcon: RconConfig{
@@ -166,12 +187,12 @@ func TestConfig(t *testing.T) {
 				MinecraftHostname: minecraftHostnameForTest,
 				Bot: BotConfig{
 					LINEConfigs: []LINEConfig{{
-						Endpoint:         botLINEEndpointForTest,
-						ChannelSecret:    botLINEChannelSecretForTest,
-						ChannelToken:     botLINEChannelTokenForTest,
-						GroupIDs:         botLINEGroupIDForTest,
-						NotificationMode: `invalid`, // invalid
+						Endpoint:      botLINEEndpointForTest,
+						ChannelSecret: botLINEChannelSecretForTest,
+						ChannelToken:  botLINEChannelTokenForTest,
+						GroupIDs:      botLINEGroupIDForTest,
 					}},
+					NotificationMode: `invalid`, // invalid
 				},
 				Rcon: RconConfig{
 					Password: rconPasswordForTest,

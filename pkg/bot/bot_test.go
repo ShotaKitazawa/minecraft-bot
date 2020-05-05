@@ -62,7 +62,7 @@ func TestBot(t *testing.T) {
 				Plugins:           []PluginInterface{PluginMock{}},
 			}
 			output := pc.ReceiveMessageEntry(&botplug.MessageInput{
-				Messages: []string{`/test`}, // valid
+				Messages: []string{`!test`}, // valid
 			})
 			assert.Equal(t, 1, len(output.Queue))
 			result, ok := output.Queue[0].(string)
@@ -76,7 +76,7 @@ func TestBot(t *testing.T) {
 				Plugins:           []PluginInterface{PluginMock{}},
 			}
 			output := pc.ReceiveMessageEntry(&botplug.MessageInput{
-				Messages: []string{`/hoge`}, // no such command
+				Messages: []string{`!hoge`}, // no such command
 			})
 			assert.Equal(t, 1, len(output.Queue))
 			result, ok := output.Queue[0].(string)

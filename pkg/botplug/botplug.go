@@ -1,10 +1,13 @@
 package botplug
 
-import "github.com/sirupsen/logrus"
+import (
+	"github.com/sirupsen/logrus"
+)
 
 type BaseConfig struct {
-	ID     uint
-	Logger *logrus.Logger
+	ID      uint
+	Logger  *logrus.Logger
+	Plugins []BotPlugin
 }
 
 var id = 0

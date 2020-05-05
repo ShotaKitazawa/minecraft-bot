@@ -20,7 +20,6 @@ type BotAdaptor struct {
 	Endpoint         string
 	GroupIDs         []string
 	bot              *linebot.Client
-	Plugins          []botplug.BotPlugin
 }
 
 func New(logger *logrus.Logger, endpoint, channelSecret, channelToken, groupIDsStr, notificationMode string) (*BotAdaptor, error) {
@@ -61,14 +60,21 @@ func (bot *BotAdaptor) WithPlugin(plugin botplug.BotPlugin) *BotAdaptor {
 }
 
 // SendTextMessage is pkg/botplug.BotSender interface's implementation
-func (sender *BotAdaptor) SendTextMessage(text string) (err error) {
-	for _, groupID := range sender.GroupIDs {
-		if _, err := sender.bot.PushMessage(groupID, linebot.NewTextMessage(text)).Do(); err != nil {
-			sender.Logger.Error(`failed to push notification: `, err)
+func (ba *BotAdaptor) SendTextMessageToChannels(text string) (err error) {
+	for _, groupID := range ba.GroupIDs {
+		if err := ba.sendTextMessage(groupID, text); err != nil {
 			return err
 		}
 	}
 	return nil
+}
+func (ba *BotAdaptor) sendTextMessage(groupID, text string) (err error) {
+	_, err = ba.bot.PushMessage(groupID, linebot.NewTextMessage(text)).Do()
+	return err
+}
+func (ba *BotAdaptor) replyTextMessage(replyToken, text string) (err error) {
+	_, err = ba.bot.ReplyMessage(replyToken, linebot.NewTextMessage(text)).Do()
+	return err
 }
 
 // pushMessageLoop is called when Bot instance created
@@ -78,11 +84,20 @@ func (ba *BotAdaptor) pushMessageLoop() (err error) {
 			// execute user function
 			output := plugin.PushMessageEntry()
 			// proceed contents in queue
-			if err := ba.pushFromQueue(output); err != nil {
-				ba.Logger.Error(err)
+			texts, err := botplug.FormatToText(output)
+			if err != nil {
+				return err
+			}
+			for _, text := range texts {
+				if text == "" {
+					continue
+				}
+				if err := ba.SendTextMessageToChannels(text); err != nil {
+					ba.Logger.Error(`failed to push notification: `, err)
+				}
 			}
 		}
-		time.Sleep(time.Second)
+		time.Sleep(time.Millisecond)
 	}
 }
 
@@ -140,8 +155,14 @@ func (receiver *BotAdaptor) receiveTextMessage(event *linebot.Event) (err error)
 			return
 		}
 		// proceed contents in queue
-		if err := receiver.replyFromQueue(event, output); err != nil {
+		texts, err := botplug.FormatToText(output)
+		if err != nil {
 			return err
+		}
+		for _, text := range texts {
+			if err := receiver.replyTextMessage(event.ReplyToken, text); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -165,66 +186,14 @@ func (receiver *BotAdaptor) receiveMemberJoin(event *linebot.Event) (err error) 
 			return
 		}
 		// proceed contents in queue
-		if err := receiver.replyFromQueue(event, output); err != nil {
+		texts, err := botplug.FormatToText(output)
+		if err != nil {
 			return err
 		}
-
-	}
-	return nil
-}
-
-func (receiver *BotAdaptor) replyFromQueue(event *linebot.Event, output *botplug.MessageOutput) (err error) {
-	// proceed contents in queue
-	for _, element := range output.Queue {
-		switch typedElement := element.(type) {
-		case string:
-			if _, err = receiver.bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(typedElement)).Do(); err != nil {
-				return
+		for _, text := range texts {
+			if err := receiver.replyTextMessage(event.ReplyToken, text); err != nil {
+				return err
 			}
-		case []string:
-			if _, err = receiver.bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(strings.Join(typedElement, ","))).Do(); err != nil {
-				return
-			}
-		case error:
-			if _, err = receiver.bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(typedElement.Error())).Do(); err != nil {
-				return
-			}
-		case []linebot.SendingMessage:
-			if _, err = receiver.bot.ReplyMessage(event.ReplyToken, typedElement...).Do(); err != nil {
-				return
-			}
-		}
-	}
-	return nil
-}
-
-func (ba *BotAdaptor) pushFromQueue(output *botplug.MessageOutput) (err error) {
-	// proceed contents in queue
-	for _, element := range output.Queue {
-		switch typedElement := element.(type) {
-		case string:
-			if typedElement == "" {
-				return
-			}
-			if err = ba.SendTextMessage(typedElement); err != nil {
-				return
-			}
-		case []string:
-			if len(typedElement) == 0 {
-				return
-			}
-			if err = ba.SendTextMessage(strings.Join(typedElement, ",")); err != nil {
-				return
-			}
-		case error:
-			if typedElement.Error() == "" {
-				return
-			}
-			if err = ba.SendTextMessage(typedElement.Error()); err != nil {
-				return
-			}
-		case []linebot.SendingMessage:
-			// TODO: implement
 		}
 	}
 	return nil

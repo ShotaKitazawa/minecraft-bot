@@ -12,6 +12,7 @@ import (
 
 	"github.com/ShotaKitazawa/minecraft-bot/pkg/bot"
 	"github.com/ShotaKitazawa/minecraft-bot/pkg/botplug/line"
+	"github.com/ShotaKitazawa/minecraft-bot/pkg/botplug/slack"
 	"github.com/ShotaKitazawa/minecraft-bot/pkg/eventer"
 	"github.com/ShotaKitazawa/minecraft-bot/pkg/exporter"
 	"github.com/ShotaKitazawa/minecraft-bot/pkg/flag"
@@ -60,14 +61,24 @@ func main() {
 	// set logger
 	logger = newLogger(conf.LogLevel)
 
-	// set LINE config
+	// set LINE bot config
 	var lineBots []*line.BotAdaptor
 	for _, lineConfig := range conf.Bot.LINEConfigs {
-		bot, err := line.New(logger, lineConfig.Endpoint, lineConfig.ChannelSecret, lineConfig.ChannelToken, lineConfig.GroupIDs, lineConfig.NotificationMode)
+		bot, err := line.New(logger, lineConfig.Endpoint, lineConfig.ChannelSecret, lineConfig.ChannelToken, lineConfig.GroupIDs, conf.Bot.NotificationMode)
 		if err != nil {
 			logger.Fatal(err)
 		}
 		lineBots = append(lineBots, bot)
+	}
+
+	// set Slack bot config
+	var slackBots []*slack.BotAdaptor
+	for _, slackConfig := range conf.Bot.SlackConfigs {
+		bot, err := slack.New(logger, slackConfig.Token, slackConfig.ChannelIDs, conf.Bot.NotificationMode)
+		if err != nil {
+			logger.Fatal(err)
+		}
+		slackBots = append(slackBots, bot)
 	}
 
 	// run sharedMem & get sharedMem instance
@@ -111,7 +122,7 @@ func main() {
 	prometheus.MustRegister(collector)
 	http.Handle("/metrics", promhttp.Handler())
 
-	// run bot
+	// run LINE bot
 	for _, lineBotInstance := range lineBots {
 		bot, err := bot.New(logger, m, rcon, conf.MinecraftHostname, lineBotInstance.NotificationMode)
 		if err != nil {
@@ -122,6 +133,15 @@ func main() {
 			logger.Fatal(err)
 		}
 		http.Handle(lineBotInstance.Endpoint, handler)
+	}
+
+	// run Slack bot
+	for _, slackBotInstance := range slackBots {
+		bot, err := bot.New(logger, m, rcon, conf.MinecraftHostname, slackBotInstance.NotificationMode)
+		if err != nil {
+			logger.Fatal(err)
+		}
+		go slackBotInstance.WithPlugin(bot).Run()
 	}
 
 	logger.Fatal(http.ListenAndServe(":8080", nil))
