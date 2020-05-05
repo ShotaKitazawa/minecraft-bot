@@ -161,6 +161,29 @@ func TestConfig(t *testing.T) {
 			err := ValidateConfig(conf)
 			assert.NotNil(t, err)
 		})
+		t.Run(`invalid: .bot.line[].notification-mode is invalid`, func(t *testing.T) {
+			conf := &Config{
+				MinecraftHostname: minecraftHostnameForTest,
+				Bot: BotConfig{
+					LINEConfigs: []LINEConfig{{
+						Endpoint:         botLINEEndpointForTest,
+						ChannelSecret:    botLINEChannelSecretForTest,
+						ChannelToken:     botLINEChannelTokenForTest,
+						GroupIDs:         botLINEGroupIDForTest,
+						NotificationMode: `invalid`, // invalid
+					}},
+				},
+				Rcon: RconConfig{
+					Password: rconPasswordForTest,
+				},
+				SharedMem: SharedMemConfig{
+					Mode: sharedmemModeForTest,
+				},
+			}
+			err := ValidateConfig(conf)
+			assert.NotNil(t, err)
+		})
+
 		t.Run(`invalid: .bot.rcon.password is empty`, func(t *testing.T) {
 			conf := &Config{
 				MinecraftHostname: minecraftHostnameForTest,

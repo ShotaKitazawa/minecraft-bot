@@ -96,22 +96,22 @@ func ValidateConfig(config *Config) error {
 
 	for _, LINEConfig := range config.Bot.LINEConfigs {
 		if LINEConfig.Endpoint == "" {
-			return errors.New(`"bot.line.endpoint" is requirement field`)
+			return errors.New(`"bot.line[].endpoint" is requirement field`)
 		}
 		if LINEConfig.ChannelSecret == "" {
-			return errors.New(`"bot.line.channel-secret" is requirement field`)
+			return errors.New(`"bot.line[].channel-secret" is requirement field`)
 		}
 		if LINEConfig.ChannelToken == "" {
-			return errors.New(`"bot.line.channel-token" is requirement field`)
+			return errors.New(`"bot.line[].channel-token" is requirement field`)
 		}
 		if LINEConfig.GroupIDs == "" {
-			logger.Warnf(`"bot.line.group-id" is empty, push notification is disabled.`)
+			logger.Warnf(`"bot.line[].group-id" is empty, push notification is disabled.`)
 		}
 		if LINEConfig.NotificationMode == "" {
 			LINEConfig.NotificationMode = "all"
 		} else if !(LINEConfig.NotificationMode == "all" ||
 			LINEConfig.NotificationMode == "none") {
-			return errors.New(`"notification-mode" only support "all", and "none"`)
+			return errors.New(`"bot.line[].notification-mode" only support "all", and "none"`)
 		}
 	}
 	if config.Rcon.Host == "" {
