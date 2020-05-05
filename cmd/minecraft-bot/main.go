@@ -63,7 +63,7 @@ func main() {
 	// set LINE config
 	var lineBots []*line.BotAdaptor
 	for _, lineConfig := range conf.Bot.LINEConfigs {
-		bot, err := line.New(logger, lineConfig.Endpoint, lineConfig.ChannelSecret, lineConfig.ChannelToken, lineConfig.GroupIDs)
+		bot, err := line.New(logger, lineConfig.Endpoint, lineConfig.ChannelSecret, lineConfig.ChannelToken, lineConfig.GroupIDs, lineConfig.NotificationMode)
 		if err != nil {
 			logger.Fatal(err)
 		}
@@ -113,7 +113,7 @@ func main() {
 
 	// run bot
 	for _, lineBotInstance := range lineBots {
-		bot, err := bot.New(conf.MinecraftHostname, m, rcon, logger)
+		bot, err := bot.New(logger, m, rcon, conf.MinecraftHostname, lineBotInstance.NotificationMode)
 		if err != nil {
 			logger.Fatal(err)
 		}

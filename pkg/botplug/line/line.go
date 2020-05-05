@@ -14,15 +14,16 @@ import (
 
 type BotAdaptor struct {
 	botplug.BaseConfig
-	ChannelSecret string
-	ChannelToken  string
-	bot           *linebot.Client
-	Endpoint      string
-	GroupIDs      []string
-	Plugins       []botplug.BotPlugin
+	ChannelSecret    string
+	ChannelToken     string
+	NotificationMode string
+	Endpoint         string
+	GroupIDs         []string
+	bot              *linebot.Client
+	Plugins          []botplug.BotPlugin
 }
 
-func New(logger *logrus.Logger, endpoint, channelSecret, channelToken, GroupIDsStr string) (*BotAdaptor, error) {
+func New(logger *logrus.Logger, endpoint, channelSecret, channelToken, groupIDsStr, notificationMode string) (*BotAdaptor, error) {
 	botplugLINEConfig := botplug.New(logger)
 	bot, err := linebot.New(channelSecret, channelToken)
 	if err != nil {
@@ -30,12 +31,13 @@ func New(logger *logrus.Logger, endpoint, channelSecret, channelToken, GroupIDsS
 	}
 
 	ba := &BotAdaptor{
-		BaseConfig:    botplugLINEConfig,
-		ChannelSecret: channelSecret,
-		ChannelToken:  channelToken,
-		bot:           bot,
-		Endpoint:      endpoint,
-		GroupIDs:      strings.Split(GroupIDsStr, ","),
+		BaseConfig:       botplugLINEConfig,
+		ChannelSecret:    channelSecret,
+		ChannelToken:     channelToken,
+		NotificationMode: notificationMode,
+		Endpoint:         endpoint,
+		GroupIDs:         strings.Split(groupIDsStr, ","),
+		bot:              bot,
 	}
 	go ba.pushMessageLoop()
 	return ba, nil

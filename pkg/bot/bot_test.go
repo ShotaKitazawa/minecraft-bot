@@ -6,6 +6,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/ShotaKitazawa/minecraft-bot/pkg/bot/command"
 	"github.com/ShotaKitazawa/minecraft-bot/pkg/botplug"
 	"github.com/ShotaKitazawa/minecraft-bot/pkg/domain/i18n"
 	"github.com/ShotaKitazawa/minecraft-bot/pkg/mock"
@@ -21,6 +22,38 @@ var (
 )
 
 func TestBot(t *testing.T) {
+
+	t.Run(`New()`, func(t *testing.T) {
+		t.Run(`valid (notificationMode is none)`, func(t *testing.T) {
+			notificationMode := "none"
+			expected := pcForTest
+			expected.NotificationMode = notificationMode
+
+			pc, err := New(loggerForTest, &mock.SharedmemMockValid{}, &mock.RconClientMockValid{}, mock.MockMinecraftHostnameValue, notificationMode)
+			assert.Nil(t, err)
+			assert.Equal(t, expected, pc)
+		})
+		t.Run(`valid (notificationMode is all)`, func(t *testing.T) {
+			notificationMode := "all"
+			expected := pcForTest
+			expected.NotificationMode = notificationMode
+			expected.Subscriber = &mock.SubscriberMockValid{}
+
+			pc, err := New(loggerForTest, &mock.SharedmemMockValid{}, &mock.RconClientMockValid{}, mock.MockMinecraftHostnameValue, notificationMode)
+			assert.Nil(t, err)
+			assert.Equal(t, expected, pc)
+		})
+		t.Run(`invalid (sharedmem is invalid)`, func(t *testing.T) {
+			notificationMode := "all"
+			expected := pcForTest
+			expected.NotificationMode = notificationMode
+
+			_, err := New(loggerForTest, &mock.SharedmemMockInvalid{}, &mock.RconClientMockValid{}, mock.MockMinecraftHostnameValue, notificationMode)
+			assert.NotNil(t, err)
+		})
+
+	})
+
 	t.Run(`ReceiveMessageEntry()`, func(t *testing.T) {
 		t.Run(`succeed`, func(t *testing.T) {
 			pc := PluginConfig{
@@ -76,6 +109,38 @@ func TestBot(t *testing.T) {
 		assert.Equal(t, i18n.T.Sprintf(i18n.MessageMemberJoined, pc.MinecraftHostname), result)
 	})
 
+	t.Run(`PushMessageEntry()`, func(t *testing.T) {
+		t.Run(`normal (get value from subscriber & push notification)`, func(t *testing.T) {
+			pc := PluginConfig{
+				MinecraftHostname: MinecraftHostnameForTest,
+				Logger:            loggerForTest,
+				Sender:            &mock.BotSenderMockValid{},
+				Subscriber:        &mock.SubscriberMockValid{},
+			}
+			queue := pc.PushMessageEntry()
+			assert.Equal(t, &botplug.MessageOutput{Queue: []interface{}{mock.MockMessageValue}}, queue)
+		})
+		t.Run(`normal (subscriber is empty)`, func(t *testing.T) {
+			pc := PluginConfig{
+				MinecraftHostname: MinecraftHostnameForTest,
+				Logger:            loggerForTest,
+				Sender:            &mock.BotSenderMockValid{},
+			}
+			queue := pc.PushMessageEntry()
+			assert.Equal(t, &botplug.MessageOutput{}, queue)
+		})
+		t.Run(`abnormal (subscriber is invalid)`, func(t *testing.T) {
+			pc := PluginConfig{
+				MinecraftHostname: MinecraftHostnameForTest,
+				Logger:            loggerForTest,
+				Sender:            &mock.BotSenderMockValid{},
+				Subscriber:        &mock.SubscriberMockInvalid{},
+			}
+			queue := pc.PushMessageEntry()
+			assert.Equal(t, &botplug.MessageOutput{}, queue)
+		})
+	})
+
 	t.Run(`pushToChat()`, func(t *testing.T) {
 		pc := PluginConfig{
 			MinecraftHostname: MinecraftHostnameForTest,
@@ -94,4 +159,32 @@ func (p PluginMock) CommandName() string { return `test` }
 func (p PluginMock) ReceiveMessage(*botplug.MessageInput) *botplug.MessageOutput {
 	var queue []interface{}
 	return &botplug.MessageOutput{Queue: append(queue, pluginReturnMsgForTest)}
+}
+
+var pcForTest = &PluginConfig{
+	MinecraftHostname: mock.MockMinecraftHostnameValue,
+	SharedMem:         &mock.SharedmemMockValid{},
+	Rcon:              &mock.RconClientMockValid{},
+	Logger:            loggerForTest,
+	Plugins: []PluginInterface{
+		command.PluginList{
+			SharedMem: &mock.SharedmemMockValid{},
+			Logger:    loggerForTest,
+		},
+		command.PluginTitle{
+			Rcon:   &mock.RconClientMockValid{},
+			Logger: loggerForTest,
+		},
+		command.PluginWhitelist{
+			SharedMem: &mock.SharedmemMockValid{},
+			Rcon:      &mock.RconClientMockValid{},
+			Logger:    loggerForTest,
+		},
+		command.PluginHelp{
+			Logger: loggerForTest,
+		},
+		command.PluginID{
+			Logger: loggerForTest,
+		},
+	},
 }
