@@ -10,6 +10,7 @@ minecraft-bot
 minecraft-bot has the following features.
 
 * **notification Bot** : notify Minecraft login/logout events to some chat-tool (LINE/Slack/Discord)
+* **operation of Minecraft whitelist** : operate to whitelist of Minecraft Server through ChatBot
 * **Prometheus exporter** : support some Minecraft metrics in Prometheus exporter format
 * **source is only RCON** : minecraft-bot is not required any Mod, not required reading Minecraft world data, only using RCON
 
@@ -56,15 +57,26 @@ bind-port = 8080       # default: 8080
 log-level = "info"     # default: "info",  support "debug", "info", "warn", or "error"
 
 
+[bot]
+# bot basic Configuration (option)
+notification-mode = "XXX"  # default: "all", support "none", or "all"
+
 [[bot.line]]
-# LINE Configuration (requirement)
+# LINE Bot Configuration (requirement)
 endpoint = "/linebot"
 channel-secret = "XXX"
 channel-token = "XXX"
 
-# LINE Configuration (option, )
-group-ids = "XXX"          # default: none,   cannot push notification without this
-notification-mode = "XXX"  # default: "all",  support "none", or "all"
+# LINE Bot Configuration (option)
+group-ids = "XXX"  # default: none, cannot push notification without this
+
+
+[[bot.slack]]
+# Slack Bot Configuration (requirement)
+token = "XXX"
+
+# Slack Bot Configuration (option)
+channel-ids = "XXX"  # default: none, cannot push notification without this
 
 
 [rcon]
@@ -89,7 +101,28 @@ port = 6379           # default: 6379
 
 ### Execution example
 
-* enable one LINE Bot
+* enable one LINE Bot belong to 2 Groups
+* using Redis in sharedmem
+* minecraft-bot, Minecraft, Redis exist in the same server
+
+```
+$ cat config.toml
+minecraft-hostname = "your_domain"
+
+[[bot.line]]
+endpoint = "/linebot"
+channel-secret = "XXX"
+channel-token = "XXX"
+group-ids = "GROUP1,GROUP2"
+
+[rcon]
+password = "XXX"
+
+[sharedmem]
+mode = "redis"
+```
+
+* enable two LINE Bot & one Slack Bot, each belong to 1 group
 * using Redis in sharedmem
 * minecraft-bot, Minecraft, Redis exist in the same server
 
@@ -103,17 +136,21 @@ channel-secret = "XXX"
 channel-token = "XXX"
 group-ids = "XXX"
 
+[[bot.line]]
+endpoint = "/test"
+channel-secret = "XXX"
+channel-token = "XXX"
+group-ids = "XXX"
+
+[[bot.slack]]
+token = "XXX"
+channel-ids = "XXX"
+
 [rcon]
 password = "XXX"
 
 [sharedmem]
 mode = "redis"
-```
-
-* run `minecraft-bot`
-
-```
-$ minecraft-bot -f config.toml
 ```
 
 ## Required pre-setup
@@ -133,13 +170,26 @@ rcon.port=[minecraftRconPort]
 * Setup LINE `Messageing API` : https://developers.line.biz/console/
     * Webhook URL: `https://<your_domain>/<bot.line.endpoint>`
 
+* Look up GroupID
+    1. run bot without `group-ids` of `[[bot.line]]` in config.toml
+    2. chat `!id` in specified group
+    3. check response of `GroupID: XXX`
+    4. postscript `group-ids` of `[[bot.line]]` in config.toml & re-run bot
+
 ### setup Bot for Slack
 
-TBD
+* Setup Slack Bot & Get `Bot User OAuth Access Token` : https://api.slack.com/apps/
+
+* Look up GroupID
+    1. run bot without `group-ids` of `[[bot.line]]` in config.toml
+    2. chat `!id` in specified group
+    3. check response of `GroupID: XXX`
+    4. postscript `group-ids` of `[[bot.line]]` in config.toml & re-run bot
 
 ### setup Bot for Discord
 
 TBD
+
 
 ### Bot needs to support HTTPS separately
 
