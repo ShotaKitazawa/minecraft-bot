@@ -19,22 +19,22 @@ func initJapanese() {
 	message.SetString(language.Japanese, MessageError, `内部エラーが発生しました`)
 
 	message.SetString(language.Japanese, MessageHelp, `
-/help
+!help
 ヘルプメッセージを表示します
 
-/list
+!list
 ログイン中のユーザ一覧を表示します
 
-/title hoge
+!title hoge
 Minecraftのゲーム画面に hoge と表示されます
 
-/whitelist list
+!whitelist list
 ホワイトリストを表示します
 
-/whitelist add hoge
+!whitelist add hoge
 ユーザ hoge をホワイトリストに追加します
 
-/whitelist delete hoge
+!whitelist delete hoge
 ユーザ hoge をホワイトリストから削除します
 `)
 
@@ -42,7 +42,7 @@ Minecraftのゲーム画面に hoge と表示されます
 
 	message.SetString(language.Japanese, MessageMemberJoined, `
 ようこそ！ 以下の手順でセットアップをしてください。
-1. このトークルームで "/whitelist add ${MINECRAFT_ACCOUNT_ID}" と発言
+1. このトークルームで "!whitelist add ${MINECRAFT_ACCOUNT_ID}" と発言
 2. Minecraft を起動して、"%s" サーバに参加
 `)
 

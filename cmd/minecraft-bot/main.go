@@ -11,6 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/ShotaKitazawa/minecraft-bot/pkg/bot"
+	"github.com/ShotaKitazawa/minecraft-bot/pkg/botplug/discord"
 	"github.com/ShotaKitazawa/minecraft-bot/pkg/botplug/line"
 	"github.com/ShotaKitazawa/minecraft-bot/pkg/botplug/slack"
 	"github.com/ShotaKitazawa/minecraft-bot/pkg/eventer"
@@ -81,6 +82,16 @@ func main() {
 		slackBots = append(slackBots, bot)
 	}
 
+	// set Discord bot config
+	var discordBots []*discord.BotAdaptor
+	for _, discordConfig := range conf.Bot.DiscordConfigs {
+		bot, err := discord.New(logger, discordConfig.Token, discordConfig.ChannelIDs, conf.Bot.NotificationMode)
+		if err != nil {
+			logger.Fatal(err)
+		}
+		discordBots = append(discordBots, bot)
+	}
+
 	// run sharedMem & get sharedMem instance
 	m := func(sharedmemMode string) sharedmem.SharedMem {
 		switch sharedmemMode {
@@ -144,5 +155,13 @@ func main() {
 		go slackBotInstance.WithPlugin(bot).Run()
 	}
 
+	// run Discord bot
+	for _, discordBotInstance := range discordBots {
+		bot, err := bot.New(logger, m, rcon, conf.MinecraftHostname, discordBotInstance.NotificationMode)
+		if err != nil {
+			logger.Fatal(err)
+		}
+		discordBotInstance.WithPlugin(bot).Run()
+	}
 	logger.Fatal(http.ListenAndServe(":8080", nil))
 }

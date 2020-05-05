@@ -18,6 +18,8 @@ const (
 	botLINEGroupIDForTest       = `group-id`
 	botSlackTokenForTest        = `token`
 	botSlackChannelForTest      = `channel-id`
+	botDiscordTokenForTest      = `token`
+	botDiscordChannelForTest    = `channel-id`
 	rconHostForTest             = `127.0.0.1`
 	rconPortForTest             = 25575
 	rconPasswordForTest         = `rcon-password`
@@ -94,6 +96,26 @@ func TestConfig(t *testing.T) {
 			err := ValidateConfig(conf)
 			assert.Nil(t, err)
 		})
+		t.Run(`valid: 1 Discord config`, func(t *testing.T) {
+			conf := &Config{
+				MinecraftHostname: minecraftHostnameForTest,
+				Bot: BotConfig{
+					DiscordConfigs: []DiscordConfig{{
+						Token:      botDiscordTokenForTest,
+						ChannelIDs: botDiscordChannelForTest,
+					}},
+				},
+				Rcon: RconConfig{
+					Password: rconPasswordForTest,
+				},
+				SharedMem: SharedMemConfig{
+					Mode: sharedmemModeForTest,
+				},
+			}
+			err := ValidateConfig(conf)
+			assert.Nil(t, err)
+		})
+
 		t.Run(`valid: 2 LINE configs`, func(t *testing.T) {
 			conf := &Config{
 				MinecraftHostname: minecraftHostnameForTest,

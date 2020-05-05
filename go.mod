@@ -4,13 +4,12 @@ go 1.14
 
 require (
 	github.com/BurntSushi/toml v0.3.1
-	github.com/ShotaKitazawa/botplug v0.0.0-20200419051922-0ef5b9f2897b
 	github.com/alicebob/gopher-json v0.0.0-20180125190556-5a6b3ba71ee6 // indirect
 	github.com/alicebob/miniredis v2.5.0+incompatible
+	github.com/bwmarrin/discordgo v0.20.3
 	github.com/deckarep/golang-set v1.7.1
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/line/line-bot-sdk-go v7.3.0+incompatible
-	github.com/nlopes/slack v0.6.0
 	github.com/prometheus/client_golang v1.5.1
 	github.com/seeruk/minecraft-rcon v0.0.0-20190221212056-6ab996d90449
 	github.com/sirupsen/logrus v1.6.0
