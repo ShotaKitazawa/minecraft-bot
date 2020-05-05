@@ -6,7 +6,7 @@ type BotSenderMockValid struct {
 	Msg string
 }
 
-func (sender *BotSenderMockValid) SendTextMessage(msg string) error {
+func (sender *BotSenderMockValid) SendTextMessageToChannels(msg string) error {
 	sender.Msg = msg
 	return nil
 }
