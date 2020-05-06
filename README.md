@@ -16,7 +16,13 @@ minecraft-bot has the following features.
 
 ## Demo
 
-![demo.gif](./images/demo.gif)
+* operate by chat & Login/Logout notification to chat
+
+![demo.gif](./images/demo_1.gif)
+
+* using multi chat platform
+
+![demo.gif](./images/demo_2.gif)
 
 ### Dashboard
 
