@@ -4,7 +4,7 @@ minecraft-bot
 ![License](https://img.shields.io/github/license/ShotaKitazawa/minecraft-bot)
 ![test](https://github.com/ShotaKitazawa/minecraft-bot/workflows/test/badge.svg)
 ![Go Report Card](https://goreportcard.com/badge/github.com/ShotaKitazawa/minecraft-bot)
-![Dependabot](https://flat.badgen.net/dependabot/thepracticaldev/dev.to?icon=dependabot)
+![Dependabot](https://badgen.net/dependabot/ShotaKitazawa/minecraft-bot?icon=dependabot)
 
 
 minecraft-bot has the following features.
