@@ -70,8 +70,8 @@ func (c Client) command(command Command) ([]string, error) {
 func (c Client) List() ([]string, error) {
 	result, err := c.command(Command{
 		command:            `list`,
-		expression:         `There are [0-9].* of a max [0-9].* players online: (.*)$`,
-		expressionNotFound: `There are 0 of a max [0-9].* players online:`,
+		expression:         `There are [0-9].* of a max of [0-9].* players online: (.*)$`,
+		expressionNotFound: `There are 0 of a max of [0-9].* players online:`,
 	})
 	if err != nil {
 		return nil, err
