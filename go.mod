@@ -13,7 +13,7 @@ require (
 	github.com/prometheus/client_golang v1.9.0
 	github.com/seeruk/minecraft-rcon v0.0.0-20190221212056-6ab996d90449
 	github.com/sirupsen/logrus v1.7.0
-	github.com/slack-go/slack v0.7.4
+	github.com/slack-go/slack v0.8.0
 	github.com/stretchr/testify v1.6.1
 	github.com/yuin/gopher-lua v0.0.0-20191220021717-ab39c6098bdb // indirect
 	golang.org/x/text v0.3.5
