@@ -192,6 +192,7 @@ github.com/line/line-bot-sdk-go v7.5.0+incompatible/go.mod h1:0RjLjJEAU/3GIcHkC3
 github.com/line/line-bot-sdk-go v7.6.0+incompatible h1:Nc6hiry9gAaWJ28VAmH5b/mNqAr2l9leHXTVGmn4jHQ=
 github.com/line/line-bot-sdk-go v7.6.0+incompatible/go.mod h1:0RjLjJEAU/3GIcHkC3av6O4jInAbt25nnZVmOFUgDBg=
 github.com/line/line-bot-sdk-go v7.7.0+incompatible/go.mod h1:0RjLjJEAU/3GIcHkC3av6O4jInAbt25nnZVmOFUgDBg=
+github.com/line/line-bot-sdk-go v7.8.0+incompatible/go.mod h1:0RjLjJEAU/3GIcHkC3av6O4jInAbt25nnZVmOFUgDBg=
 github.com/lyft/protoc-gen-validate v0.0.13/go.mod h1:XbGvPuh87YZc5TdIa2/I4pLk0QoUACkjt2znoq26NVQ=
 github.com/mattn/go-colorable v0.0.9/go.mod h1:9vuHe8Xs5qXnSaW/c/ABM9alt+Vo+STaOChaDxuIBZU=
 github.com/mattn/go-isatty v0.0.3/go.mod h1:M+lRXTBqGeGNdLjl/ufCoiOlB5xdOkqRJdNxMWT7Zi4=
