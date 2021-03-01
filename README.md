@@ -113,113 +113,18 @@ host = "127.0.0.1"    # default: "127.0.0.1"
 port = 6379           # default: 6379
 ```
 
-### Execution example
+## For more informations
 
-* enable one LINE Bot belong to 2 Groups
-* using Redis in sharedmem
-* minecraft-bot, Minecraft, Redis exist in the same server
+https://github.com/ShotaKitazawa/minecraft-bot/blob/master/docs
 
-```
-$ cat config.toml
-minecraft-hostname = "your_domain"
+## Reference
 
-[[bot.line]]
-endpoint = "/linebot"
-channel-secret = "XXX"
-channel-token = "XXX"
-group-ids = "GROUP1,GROUP2"
+* [Mod 無し Minecraft で動く Chat Bot + α](https://zenn.dev/kanatakita/articles/5883c5de1b40e17febad)
 
-[rcon]
-password = "XXX"
+## Author
 
-[sharedmem]
-mode = "redis"
-```
+[twitter](https://twitter.com/kanatakita)
 
-* enable two LINE Bot & one Slack Bot, each belong to 1 group
-* using Redis in sharedmem
-* minecraft-bot, Minecraft, Redis exist in the same server
+## Licence
 
-```
-$ cat config.toml
-minecraft-hostname = "your_domain"
-
-[[bot.line]]
-endpoint = "/linebot"
-channel-secret = "XXX"
-channel-token = "XXX"
-group-ids = "XXX"
-
-[[bot.line]]
-endpoint = "/test"
-channel-secret = "XXX"
-channel-token = "XXX"
-group-ids = "XXX"
-
-[[bot.slack]]
-token = "XXX"
-channel-ids = "XXX"
-
-[rcon]
-password = "XXX"
-
-[sharedmem]
-mode = "redis"
-```
-
-## Required pre-setup
-
-### Minecraft Server Setup
-
-In your Minecraft `server.properties`, make sure you have and restart the server.
-
-```
-enable-rcon=true
-rcon.password=[minecraftRconPassword]
-rcon.port=[minecraftRconPort]
-```
-
-### setup Bot for LINE
-
-* Setup LINE `Messageing API` : https://developers.line.biz/console/
-    * Webhook URL: `https://<your_domain>/<bot.line.endpoint>`
-
-* Look up GroupID
-    1. run bot without `group-ids` of `[[bot.line]]` in config.toml
-    2. chat `!id` in specified group
-    3. check response of `GroupID: XXX`
-    4. postscript `group-ids` of `[[bot.line]]` in config.toml & re-run bot
-
-### setup Bot for Slack
-
-* Setup Slack Bot & Get `Bot User OAuth Access Token` : https://api.slack.com/apps/
-
-* Look up GroupID
-    1. run bot without `group-ids` of `[[bot.slack]]` in config.toml
-    2. chat `!id` in specified group
-    3. check response of `GroupID: XXX`
-    4. postscript `group-ids` of `[[bot.slack]]` in config.toml & re-run bot
-
-### setup Bot for Discord
-
-* Setup Slack Bot & Get Bot `TOKEN` : https://discord.com/developers/applications/
-
-* Look up GroupID
-    1. run bot without `group-ids` of `[[bot.discord]]` in config.toml
-    2. chat `!id` in specified group
-    3. check response of `GroupID: XXX`
-    4. postscript `group-ids` of `[[bot.discord]]` in config.toml & re-run bot
-
-### Bot needs to support HTTPS separately
-
-This bot run HTTP server, but Webhook configuration required HTTPS in most chat-provider.
-Please following the below.
-
-* using HTTPS reverse-proxy server (nginx, Caddy, etc..) & run Bot beside Minecraft server
-* using PaaS (Heroku, Google App Engine, etc..)
-    * not recommended (RCON connection is not crypted)
-
-## Architecture
-
-![](./images/architecture.png)
-
+[MIT](https://github.com/ShotaKitazawa/minecraft-bot/blob/master/LICENSE)
