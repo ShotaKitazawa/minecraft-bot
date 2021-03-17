@@ -16,7 +16,7 @@ minecraft-bot has the following features.
 
 ## Demo
 
-### operate by chat & Login/Logout notification to chat
+### operation by chat & Login/Logout notification to chat
 
 ![demo.gif](./images/demo_1.gif)
 
