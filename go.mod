@@ -6,7 +6,7 @@ require (
 	github.com/BurntSushi/toml v1.2.1
 	github.com/alicebob/gopher-json v0.0.0-20180125190556-5a6b3ba71ee6 // indirect
 	github.com/alicebob/miniredis v2.5.0+incompatible
-	github.com/bwmarrin/discordgo v0.23.2
+	github.com/bwmarrin/discordgo v0.27.1
 	github.com/deckarep/golang-set v1.8.0
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/line/line-bot-sdk-go v7.8.0+incompatible
